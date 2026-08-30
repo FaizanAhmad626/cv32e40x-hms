@@ -14,3 +14,5 @@ TAGS
 *.ip_user_files/
 .Xil/
 vivado_proj/
+dfx_runtime.txt
+min_area_pfile.tmp

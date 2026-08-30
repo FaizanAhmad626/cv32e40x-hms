@@ -13,8 +13,6 @@
 // Zero wait state: gnt = req. rvalid is asserted one cycle after an accepted
 // request, matching the BRAM read latency of 1. This requires "Primitives
 // Output Register" and "Core Output Register" to be DISABLED on both ports.
-//
-// Revision 0.01 - File Created
 //////////////////////////////////////////////////////////////////////////////////
 
 
@@ -95,13 +93,6 @@ assign data_exokay_o    = 1'b0;     // no exclusive transactions
 
 // ---------------------------------------------------------------------------
 // Unified true-dual-port BRAM
-//
-// Port A is read only: wea and dina tied off.
-// Read First mode returns the old contents on a same-address read/write
-// collision, which only matters for self-modifying code.
-//
-// "Common Clock" is enabled; if the generated port list omits clkb, delete
-// that connection.
 // ---------------------------------------------------------------------------
 blk_mem_gen_0 unified_memory (
   // Port A - instruction

@@ -1,0 +1,83 @@
+
+Discarded input sections
+
+ .text          0x00000000        0x0 /tmp/ccYIaWS1.o
+ .data          0x00000000        0x0 /tmp/ccYIaWS1.o
+ .bss           0x00000000        0x0 /tmp/ccYIaWS1.o
+ .text          0x00000000        0x0 /tmp/ccIbTR7j.o
+ .data          0x00000000        0x0 /tmp/ccIbTR7j.o
+ .bss           0x00000000        0x0 /tmp/ccIbTR7j.o
+ .comment       0x00000000       0x1a /tmp/ccIbTR7j.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+MEM              0x80000000         0x00010000         xrw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD /tmp/ccYIaWS1.o
+LOAD /tmp/ccIbTR7j.o
+
+.text           0x80000000      0x140
+ *(.text.init)
+ .text.init     0x80000000       0x54 /tmp/ccYIaWS1.o
+                0x80000000                _start
+                0x80000080                        . = ALIGN (0x80)
+ *fill*         0x80000054       0x2c 
+ *(.text.trap)
+ .text.trap     0x80000080       0x82 /tmp/ccYIaWS1.o
+                0x80000080                trap_handler
+ *(.text .text.*)
+ .text.startup.main
+                0x80000102       0x3c /tmp/ccIbTR7j.o
+                0x80000102                main
+                0x80000140                        . = ALIGN (0x4)
+ *fill*         0x8000013e        0x2 
+
+.rela.dyn       0x80000140        0x0
+ .rela.text.init
+                0x80000140        0x0 /tmp/ccYIaWS1.o
+
+.rodata         0x80000140        0x0
+                0x80000140                        . = ALIGN (0x4)
+ *(.rodata .rodata.*)
+ *(.srodata .srodata.*)
+                0x80000140                        . = ALIGN (0x4)
+
+.data           0x80000140        0x0
+                0x80000140                        . = ALIGN (0x4)
+ *(.data .data.*)
+                0x80000140                        . = ALIGN (0x4)
+                0x80000940                        PROVIDE (__global_pointer$ = (. + 0x800))
+ *(.sdata .sdata.*)
+                0x80000140                        . = ALIGN (0x4)
+
+.bss            0x80000140        0x0
+                0x80000140                        . = ALIGN (0x4)
+                0x80000140                        __bss_start = .
+ *(.sbss .sbss.*)
+ *(.bss .bss.*)
+ *(COMMON)
+                0x80000140                        . = ALIGN (0x4)
+                0x80000140                        __bss_end = .
+                0x80010000                        __stack_top = (ORIGIN (MEM) + LENGTH (MEM))
+
+/DISCARD/
+ *(.eh_frame .eh_frame.*)
+ *(.comment)
+                0x00000001                        ASSERT ((__bss_end <= (ORIGIN (MEM) + LENGTH (MEM))), Image does not fit in MEM: increase blk_mem_gen_0 depth)
+OUTPUT(led_demo.elf elf32-littleriscv)
+
+.riscv.attributes
+                0x00000000       0x4f
+ .riscv.attributes
+                0x00000000       0x4d /tmp/ccYIaWS1.o
+ .riscv.attributes
+                0x0000004d       0x4b /tmp/ccIbTR7j.o
+
+.note.GNU-stack
+                0x00000000        0x0
+ .note.GNU-stack
+                0x00000000        0x0 /tmp/ccIbTR7j.o
