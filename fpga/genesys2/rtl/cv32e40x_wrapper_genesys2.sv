@@ -22,7 +22,7 @@
 
 module cv32e40x_wrapper_genesys2 import cv32e40x_pkg::*;
 #(
-    parameter               BOOT_ADDR           = 32'h0000_0000,
+    parameter               BOOT_ADDR           = 32'h8000_0000,
     parameter               DM_EXCEPTION_ADDR   = 32'h0000_0000,
     parameter               DM_HALT_ADDR        = 32'h0000_0000,
     parameter               M_HART_ID           = 32'h0000_0000,
@@ -371,10 +371,15 @@ RISCV_Core
   .core_sleep_o       ( core_sleep_s       )
 );
 
-instruction_memory_interface instruction_memory_interface
+memory_controller
+#(
+    .MEM_DEPTH  (   16384   )   // must match blk_mem_gen_0 depth
+)
+unified_memory_controller
 (
     .clk_i              (   clk_50M_s       ),
     .rst_ni             (   rst_ns          ),
+
     .instr_req_i        (   instr_req_s     ),
     .instr_gnt_o        (   instr_gnt_s     ),
     .instr_rvalid_o     (   instr_rvalid_s  ),
@@ -383,28 +388,58 @@ instruction_memory_interface instruction_memory_interface
     .instr_prot_i       (   instr_prot_s    ),
     .instr_dbg_i        (   instr_dbg_s     ),
     .instr_rdata_o      (   instr_rdata_s   ),
-    .instr_err_o        (   instr_err_s     )
+    .instr_err_o        (   instr_err_s     ),
+
+    .data_req_i         (   data_req_s      ),
+    .data_gnt_o         (   data_gnt_s      ),
+    .data_rvalid_o      (   data_rvalid_s   ),
+    .data_addr_i        (   data_addr_s     ),
+    .data_be_i          (   data_be_s       ),
+    .data_we_i          (   data_we_s       ),
+    .data_wdata_i       (   data_wdata_s    ),
+    .data_memtype_i     (   data_memtype_s  ),
+    .data_prot_i        (   data_prot_s     ),
+    .data_dbg_i         (   data_dbg_s      ),
+    .data_atop_i        (   data_atop_s     ),
+    .data_rdata_o       (   data_rdata_s    ),
+    .data_err_o         (   data_err_s      ),
+    .data_exokay_o      (   data_exokay_s   )
 );
 
-data_memory_interface data_memory_interface
-(
-    .clk_i          (   clk_50M_s       ),
-    .rst_ni         (   rst_ns          ),
-    .data_req_i     (   data_req_s      ),
-    .data_gnt_o     (   data_gnt_s      ),
-    .data_rvalid_o  (   data_rvalid_s   ),
-    .data_addr_i    (   data_addr_s     ),
-    .data_be_i      (   data_be_s       ),
-    .data_we_i      (   data_we_s       ),
-    .data_wdata_i   (   data_wdata_s    ),
-    .data_memtype_i (   data_memtype_s  ),
-    .data_prot_i    (   data_prot_s     ),
-    .data_dbg_i     (   data_dbg_s      ),
-    .data_atop_i    (   data_atop_s     ),
-    .data_rdata_o   (   data_rdata_s    ),
-    .data_err_o     (   data_err_s      ),
-    .data_exokay_o  (   data_exokay_s   )
-);
+//instruction_memory_interface instruction_memory_interface
+//(
+//    .clk_i              (   clk_50M_s       ),
+//    .rst_ni             (   rst_ns          ),
+//    .instr_req_i        (   instr_req_s     ),
+//    .instr_gnt_o        (   instr_gnt_s     ),
+//    .instr_rvalid_o     (   instr_rvalid_s  ),
+//    .instr_addr_i       (   instr_addr_s    ),
+//    .instr_memtype_i    (   instr_memtype_s ),
+//    .instr_prot_i       (   instr_prot_s    ),
+//    .instr_dbg_i        (   instr_dbg_s     ),
+//    .instr_rdata_o      (   instr_rdata_s   ),
+//    .instr_err_o        (   instr_err_s     )
+//);
+
+//data_memory_interface data_memory_interface
+//(
+//    .clk_i          (   clk_50M_s       ),
+//    .rst_ni         (   rst_ns          ),
+//    .data_req_i     (   data_req_s      ),
+//    .data_gnt_o     (   data_gnt_s      ),
+//    .data_rvalid_o  (   data_rvalid_s   ),
+//    .data_addr_i    (   data_addr_s     ),
+//    .data_be_i      (   data_be_s       ),
+//    .data_we_i      (   data_we_s       ),
+//    .data_wdata_i   (   data_wdata_s    ),
+//    .data_memtype_i (   data_memtype_s  ),
+//    .data_prot_i    (   data_prot_s     ),
+//    .data_dbg_i     (   data_dbg_s      ),
+//    .data_atop_i    (   data_atop_s     ),
+//    .data_rdata_o   (   data_rdata_s    ),
+//    .data_err_o     (   data_err_s      ),
+//    .data_exokay_o  (   data_exokay_s   )
+//);
 
 logic [25:0] heartbeat_q;
 
