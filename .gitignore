@@ -16,3 +16,7 @@ TAGS
 vivado_proj/
 dfx_runtime.txt
 min_area_pfile.tmp
+
+# SEGGER Embedded Studio build artifacts
+sw/apps/*/Output/
+*.emSession

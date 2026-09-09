@@ -1,0 +1,85 @@
+<!DOCTYPE CrossStudio_Project_File>
+<solution Name="led_demo" target="20" version="2">
+  <configuration
+    Name="Debug"
+    c_preprocessor_definitions="DEBUG"
+    gcc_debugging_level="Level 3"
+    gcc_omit_frame_pointer="Yes"
+    gcc_optimization_level="None"
+    linker_section_placements_segments="FLASH1 RWX 0x80000000 0x00010000"
+    rv_architecture="rv32imc" />
+  <configuration
+    Name="Release"
+    c_preprocessor_definitions="NDEBUG"
+    gcc_debugging_level="Level 2"
+    gcc_omit_frame_pointer="Yes"
+    gcc_optimization_level="Level 2 balanced"
+    link_dedupe_code="Yes" />
+  <configuration
+    LIBRARY_HEAP_TYPE="Minimal"
+    LIBRARY_IO_TYPE="SEMIHOST (host-formatted)"
+    LIBRARY_LOCALES="Minimal"
+    Name="Release_MinSize"
+    c_preprocessor_definitions="NDEBUG;__OPTIMIZATION_SMALL"
+    cpp_enable_exceptions="No"
+    gcc_debugging_level="None"
+    gcc_omit_frame_pointer="Yes"
+    gcc_optimization_level="Level 2 for size"
+    gcc_short_enum="Minimal Container Size"
+    libcxx="Yes (No Exceptions)"
+    link_dedupe_code="Yes"
+    link_dedupe_data="Yes"
+    link_merge_strings="Yes"
+    link_time_optimization="Yes"
+    linker_printf_fmt_level="int"
+    linker_printf_fp_enabled="No"
+    linker_printf_width_precision_supported="No"
+    rv_library_optimization="Small"
+    rv_spring_board="Yes" />
+  <project Name="led_demo">
+    <configuration
+      LIBRARY_IO_TYPE="None"
+      Name="Common"
+      RISCV_TOOLCHAIN_VARIANT="Standard"
+      Target="RV32"
+      arm_compiler_variant="gcc"
+      arm_linker_variant="GNU"
+      build_generic_options_file_name="$(StudioDir)/bin/gcc_warning_options.xml"
+      debug_target_connection=""
+      gcc_has_Oz_optimization_level="Yes"
+      heap_size="2048"
+      libcxx="Yes"
+      libcxx-12-0-1="No"
+      link_libext_suffix=""
+      link_linker_script_file="Setup/SEGGER_Flash_RV32.icf"
+      link_standard_libraries_configuration_prefix=""
+      linker_output_format="hex"
+      linker_section_placement_file="Setup/flash_placement_riscv.xml"
+      linker_section_placements_segments="FLASH1 RX 0x00000000 0x00100000;RAM1 RWX 0x20000000 0x00010000"
+      macros="Target=RV32"
+      project_directory=""
+      project_type="Executable"
+      rv_arch_ext=""
+      rv_arch_zicsr="Yes"
+      rv_arch_zifencei="Yes"
+      rv_architecture="rv32i"
+      rv_debug_extensions="None"
+      rv_toolchain_prefix=""
+      stack_size="2048"
+      target_device_name="RV32" />
+    <configuration
+      Name="Debug"
+      linker_section_placements_segments="FLASH1 RX 0x80000000 0x00008000;RAM1 RWX 0x80008000 0x00008000"
+      rv_architecture="rv32imc" />
+    <folder Name="Setup">
+      <file file_name="Setup/flash_placement_riscv.xml" />
+    </folder>
+    <folder Name="Source">
+      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
+      <file file_name="Source/main.c" />
+    </folder>
+    <folder Name="System">
+      <file file_name="System/riscv_crt0.s" />
+    </folder>
+  </project>
+</solution>
