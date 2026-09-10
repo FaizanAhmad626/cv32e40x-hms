@@ -6,6 +6,22 @@ Versions are tagged `hms-v*` to keep them distinct from the upstream core
 tags (`0.1.0` through `0.10.0`), which belong to OpenHW and stop at the fork
 point.
 
+## hms-v0.3.1 - 2026-09-10
+
+- Linked the SEGGER build into a single memory region: replaced the stock
+  `flash_placement_riscv.xml`, which assumes separate flash and RAM and
+  forced the 64 KB BRAM into a fixed 32/32 split, with SEGGER's
+  `sram_placement_riscv.xml`. Memory Segments is now
+  `RAM1 RWX 0x80000000 0x00010000`, matching `link.ld` in the GNU flow, so
+  the linker packs code and data freely
+- Added `create_clock` for `clk_p_i` to `Genesys-2-Master.xdc`. Without it
+  2293 register pins had no clock and 7253 endpoints were unconstrained,
+  and Vivado reported all constraints met having analysed 26 flip-flops
+- Measured the achievable frequency with timing actually enforced: 200 MHz
+  fails at WNS -4.931 ns, 100 MHz at -0.426 ns, and the critical path is
+  10.1 ns through the EX-to-ID forwarding network and the DSP48 multiplier.
+  Settled at 50 MHz
+
 ## hms-v0.3.0 - 2026-09-09
 
 - Added a SEGGER Embedded Studio build of the LED demo at
