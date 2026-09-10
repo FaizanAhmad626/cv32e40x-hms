@@ -1,6 +1,6 @@
 <!DOCTYPE Linker_Placement_File>
 <Root name="Flash Section Placement">
-  <MemorySegment name="FLASH;FLASH1">
+  <MemorySegment name="SRAM;RAM1">
     <ProgramSection load="Yes" name=".vectors" start="" />
     <ProgramSection alignment="4" load="Yes" name=".init" />
     <ProgramSection alignment="4" load="Yes" name=".init_rodata" />
@@ -12,18 +12,12 @@
     <ProgramSection alignment="8" keep="Yes" load="Yes" name=".eh_frame" />
     <ProgramSection alignment="4" load="Yes" name=".gcc_except_table" />
     <ProgramSection alignment="4" load="Yes" name=".exec.itable" />
-    <ProgramSection alignment="4" load="Yes" name=".fast" runin=".fast_run" />
-    <ProgramSection alignment="4" load="Yes" name=".data" runin=".data_run" />
-    <ProgramSection alignment="4" load="Yes" name=".tdata" runin=".tdata_run" />
-    <ProgramSection alignment="4" inputsections="*(.sdata.* .sdata2.*)" load="Yes" name=".sdata" runin=".sdata_run" />
-  </MemorySegment>
-  <MemorySegment name="SRAM;RAM1">
-    <ProgramSection alignment="4" load="No" name=".fast_run" />
-    <ProgramSection alignment="4" load="No" name=".data_run" />
+    <ProgramSection alignment="4" load="Yes" name=".fast" />
+    <ProgramSection alignment="4" load="Yes" name=".data" />
+    <ProgramSection alignment="4" inputsections="*(.sdata.* .sdata2.*)" load="Yes" name=".sdata" />
     <ProgramSection alignment="4" load="No" name=".bss" />
     <ProgramSection alignment="4" load="No" name=".tbss" />
-    <ProgramSection alignment="4" load="No" name=".tdata_run" />
-    <ProgramSection alignment="4" load="No" name=".sdata_run" />
+    <ProgramSection alignment="4" load="Yes" name=".tdata" />
     <ProgramSection alignment="4" load="No" name=".sbss" />
     <ProgramSection alignment="4" load="No" name=".non_init" />
     <ProgramSection alignment="16" load="No" name=".heap" size="__HEAPSIZE__" />

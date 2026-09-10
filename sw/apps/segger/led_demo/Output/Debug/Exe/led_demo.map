@@ -2149,23 +2149,23 @@ Memory Configuration
 
 Name             Origin             Length             Attributes
 UNPLACED_SECTIONS 0x00000000         0x00000000         xw
-FLASH1           0x80000000         0x00008000         xr
-RAM1             0x80008000         0x00008000         xw
+FLASH1           0x00000000         0x00100000         xr
+RAM1             0x80000000         0x00010000         xw
 *default*        0x00000000         0xffffffff
 
 Linker script and memory map
 
-                0x80000000                        __FLASH1_segment_start__ = 0x80000000
-                0x80008000                        __FLASH1_segment_end__ = 0x80008000
-                0x00008000                        __FLASH1_segment_size__ = 0x8000
-                0x80008000                        __RAM1_segment_start__ = 0x80008000
+                0x00000000                        __FLASH1_segment_start__ = 0x0
+                0x00100000                        __FLASH1_segment_end__ = 0x100000
+                0x00100000                        __FLASH1_segment_size__ = 0x100000
+                0x80000000                        __RAM1_segment_start__ = 0x80000000
                 0x80010000                        __RAM1_segment_end__ = 0x80010000
-                0x00008000                        __RAM1_segment_size__ = 0x8000
+                0x00010000                        __RAM1_segment_size__ = 0x10000
                 0x00000800                        __HEAPSIZE__ = 0x800
                 0x00000000                        __SEGGER_RTL_vfprintf = __SEGGER_RTL_vfprintf_int_nwp
                 0x00000000                        __SEGGER_RTL_vfscanf = __SEGGER_RTL_vfscanf_int
                 0x00000800                        __STACKSIZE__ = 0x800
-                0x80000000                        __vectors_load_start__ = __FLASH1_segment_start__
+                0x80000000                        __vectors_load_start__ = __RAM1_segment_start__
 
 .vectors        0x80000000        0x0
                 0x80000000                        __vectors_start__ = .
@@ -2173,7 +2173,7 @@ Linker script and memory map
                 0x80000000                        __vectors_end__ = (__vectors_start__ + SIZEOF (.vectors))
                 0x00000000                        __vectors_size__ = SIZEOF (.vectors)
                 0x80000000                        __vectors_load_end__ = __vectors_end__
-                0x00000001                        . = ASSERT (((__vectors_start__ == __vectors_end__) || ((__vectors_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .vectors is too large to fit in FLASH1 memory segment)
+                0x00000001                        . = ASSERT (((__vectors_start__ == __vectors_end__) || ((__vectors_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .vectors is too large to fit in RAM1 memory segment)
                 0x80000000                        __init_load_start__ = ALIGN (__vectors_end__, 0x4)
 
 .init           0x80000000      0x1c2
@@ -2186,7 +2186,7 @@ Linker script and memory map
                 0x800001c2                        __init_end__ = (__init_start__ + SIZEOF (.init))
                 0x000001c2                        __init_size__ = SIZEOF (.init)
                 0x800001c2                        __init_load_end__ = __init_end__
-                0x00000001                        . = ASSERT (((__init_start__ == __init_end__) || ((__init_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .init is too large to fit in FLASH1 memory segment)
+                0x00000001                        . = ASSERT (((__init_start__ == __init_end__) || ((__init_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .init is too large to fit in RAM1 memory segment)
                 0x800001c4                        __init_rodata_load_start__ = ALIGN (__init_end__, 0x4)
 
 .init_rodata    0x800001c4        0x0
@@ -2195,7 +2195,7 @@ Linker script and memory map
                 0x800001c4                        __init_rodata_end__ = (__init_rodata_start__ + SIZEOF (.init_rodata))
                 0x00000000                        __init_rodata_size__ = SIZEOF (.init_rodata)
                 0x800001c4                        __init_rodata_load_end__ = __init_rodata_end__
-                0x00000001                        . = ASSERT (((__init_rodata_start__ == __init_rodata_end__) || ((__init_rodata_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .init_rodata is too large to fit in FLASH1 memory segment)
+                0x00000001                        . = ASSERT (((__init_rodata_start__ == __init_rodata_end__) || ((__init_rodata_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .init_rodata is too large to fit in RAM1 memory segment)
                 0x800001c4                        __text_load_start__ = ALIGN (__init_rodata_end__, 0x4)
 
 .text           0x800001c4      0x154
@@ -2218,11 +2218,11 @@ Linker script and memory map
                 0x00000154                        __text_size__ = SIZEOF (.text)
                 0x80000318                        __text_load_end__ = __text_end__
 
-.rela.dyn       0x80000000        0x0
- .rela.init     0x80000000        0x0 Output/Debug/Obj/led_demo/main.o
+.rela.dyn       0x00000000        0x0
+ .rela.init     0x00000000        0x0 Output/Debug/Obj/led_demo/main.o
  .rela.text.trap_entry
-                0x80000000        0x0 Output/Debug/Obj/led_demo/main.o
-                0x00000001                        . = ASSERT (((__text_start__ == __text_end__) || ((__text_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .text is too large to fit in FLASH1 memory segment)
+                0x00000000        0x0 Output/Debug/Obj/led_demo/main.o
+                0x00000001                        . = ASSERT (((__text_start__ == __text_end__) || ((__text_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .text is too large to fit in RAM1 memory segment)
                 0x80000318                        __dtors_load_start__ = ALIGN (__text_end__, 0x8)
 
 .dtors          0x80000318        0x0
@@ -2234,7 +2234,7 @@ Linker script and memory map
                 0x80000318                        __dtors_end__ = (__dtors_start__ + SIZEOF (.dtors))
                 0x00000000                        __dtors_size__ = SIZEOF (.dtors)
                 0x80000318                        __dtors_load_end__ = __dtors_end__
-                0x00000001                        . = ASSERT (((__dtors_start__ == __dtors_end__) || ((__dtors_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .dtors is too large to fit in FLASH1 memory segment)
+                0x00000001                        . = ASSERT (((__dtors_start__ == __dtors_end__) || ((__dtors_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .dtors is too large to fit in RAM1 memory segment)
                 0x80000318                        __ctors_load_start__ = ALIGN (__dtors_end__, 0x8)
 
 .ctors          0x80000318        0x0
@@ -2246,7 +2246,7 @@ Linker script and memory map
                 0x80000318                        __ctors_end__ = (__ctors_start__ + SIZEOF (.ctors))
                 0x00000000                        __ctors_size__ = SIZEOF (.ctors)
                 0x80000318                        __ctors_load_end__ = __ctors_end__
-                0x00000001                        . = ASSERT (((__ctors_start__ == __ctors_end__) || ((__ctors_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .ctors is too large to fit in FLASH1 memory segment)
+                0x00000001                        . = ASSERT (((__ctors_start__ == __ctors_end__) || ((__ctors_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .ctors is too large to fit in RAM1 memory segment)
                 0x80000318                        __rodata_load_start__ = ALIGN (__ctors_end__, 0x4)
 
 .rodata         0x80000318        0x0
@@ -2255,7 +2255,7 @@ Linker script and memory map
                 0x80000318                        __rodata_end__ = (__rodata_start__ + SIZEOF (.rodata))
                 0x00000000                        __rodata_size__ = SIZEOF (.rodata)
                 0x80000318                        __rodata_load_end__ = __rodata_end__
-                0x00000001                        . = ASSERT (((__rodata_start__ == __rodata_end__) || ((__rodata_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .rodata is too large to fit in FLASH1 memory segment)
+                0x00000001                        . = ASSERT (((__rodata_start__ == __rodata_end__) || ((__rodata_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .rodata is too large to fit in RAM1 memory segment)
                 0x80000318                        __srodata_load_start__ = ALIGN (__rodata_end__, 0x4)
 
 .srodata        0x80000318        0x0
@@ -2264,7 +2264,7 @@ Linker script and memory map
                 0x80000318                        __srodata_end__ = (__srodata_start__ + SIZEOF (.srodata))
                 0x00000000                        __srodata_size__ = SIZEOF (.srodata)
                 0x80000318                        __srodata_load_end__ = __srodata_end__
-                0x00000001                        . = ASSERT (((__srodata_start__ == __srodata_end__) || ((__srodata_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .srodata is too large to fit in FLASH1 memory segment)
+                0x00000001                        . = ASSERT (((__srodata_start__ == __srodata_end__) || ((__srodata_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .srodata is too large to fit in RAM1 memory segment)
                 0x80000318                        __eh_frame_load_start__ = ALIGN (__srodata_end__, 0x8)
 
 .eh_frame       0x80000318        0x0
@@ -2273,7 +2273,7 @@ Linker script and memory map
                 0x80000318                        __eh_frame_end__ = (__eh_frame_start__ + SIZEOF (.eh_frame))
                 0x00000000                        __eh_frame_size__ = SIZEOF (.eh_frame)
                 0x80000318                        __eh_frame_load_end__ = __eh_frame_end__
-                0x00000001                        . = ASSERT (((__eh_frame_start__ == __eh_frame_end__) || ((__eh_frame_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .eh_frame is too large to fit in FLASH1 memory segment)
+                0x00000001                        . = ASSERT (((__eh_frame_start__ == __eh_frame_end__) || ((__eh_frame_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .eh_frame is too large to fit in RAM1 memory segment)
                 0x80000318                        __gcc_except_table_load_start__ = ALIGN (__eh_frame_end__, 0x4)
 
 .gcc_except_table
@@ -2283,7 +2283,7 @@ Linker script and memory map
                 0x80000318                        __gcc_except_table_end__ = (__gcc_except_table_start__ + SIZEOF (.gcc_except_table))
                 0x00000000                        __gcc_except_table_size__ = SIZEOF (.gcc_except_table)
                 0x80000318                        __gcc_except_table_load_end__ = __gcc_except_table_end__
-                0x00000001                        . = ASSERT (((__gcc_except_table_start__ == __gcc_except_table_end__) || ((__gcc_except_table_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .gcc_except_table is too large to fit in FLASH1 memory segment)
+                0x00000001                        . = ASSERT (((__gcc_except_table_start__ == __gcc_except_table_end__) || ((__gcc_except_table_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .gcc_except_table is too large to fit in RAM1 memory segment)
                 0x80000318                        __exec.itable_load_start__ = ALIGN (__gcc_except_table_end__, 0x4)
 
 .exec.itable    0x80000318        0x0
@@ -2292,122 +2292,92 @@ Linker script and memory map
                 0x80000318                        __exec.itable_end__ = (__exec.itable_start__ + SIZEOF (.exec.itable))
                 0x00000000                        __exec.itable_size__ = SIZEOF (.exec.itable)
                 0x80000318                        __exec.itable_load_end__ = __exec.itable_end__
-                0x00000001                        . = ASSERT (((__exec.itable_start__ == __exec.itable_end__) || ((__exec.itable_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .exec.itable is too large to fit in FLASH1 memory segment)
+                0x00000001                        . = ASSERT (((__exec.itable_start__ == __exec.itable_end__) || ((__exec.itable_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .exec.itable is too large to fit in RAM1 memory segment)
                 0x80000318                        __fast_load_start__ = ALIGN (__exec.itable_end__, 0x4)
 
-.fast           0x80008000        0x0 load address 0x80000318
-                0x80008000                        __fast_start__ = .
+.fast           0x80000318        0x0
+                0x80000318                        __fast_start__ = .
  *(.fast .fast.*)
-                0x80008000                        __fast_end__ = (__fast_start__ + SIZEOF (.fast))
+                0x80000318                        __fast_end__ = (__fast_start__ + SIZEOF (.fast))
                 0x00000000                        __fast_size__ = SIZEOF (.fast)
-                0x80000318                        __fast_load_end__ = (__fast_load_start__ + SIZEOF (.fast))
-                0x00000001                        . = ASSERT (((__fast_load_start__ == __fast_load_end__) || ((__fast_load_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .fast is too large to fit in FLASH1 memory segment)
+                0x80000318                        __fast_load_end__ = __fast_end__
+                0x00000001                        . = ASSERT (((__fast_start__ == __fast_end__) || ((__fast_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .fast is too large to fit in RAM1 memory segment)
+                0x80000318                        __data_load_start__ = ALIGN (__fast_end__, 0x4)
 
-.fast_run       0x80008000        0x0
-                0x80008000                        __fast_run_start__ = .
-                0x80008000                        __fast_run_end__ = (__fast_run_start__ + SIZEOF (.fast))
-                0x00000000                        __fast_run_size__ = (__fast_run_end__ - __fast_run_start__)
-                0x80008000                        __fast_run_load_end__ = __fast_run_end__
-                0x00000001                        . = ASSERT (((__fast_run_start__ == __fast_run_end__) || ((__fast_run_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .fast_run is too large to fit in RAM1 memory segment)
-                0x80000318                        __data_load_start__ = ALIGN ((__fast_load_start__ + SIZEOF (.fast)), 0x4)
-
-.data           0x80008000        0x0 load address 0x80000318
-                0x80008000                        __data_start__ = .
+.data           0x80000318        0x0
+                0x80000318                        __data_start__ = .
  *(.data .data.* .gnu.linkonce.d.*)
-                0x80008000                        __data_end__ = (__data_start__ + SIZEOF (.data))
+                0x80000318                        __data_end__ = (__data_start__ + SIZEOF (.data))
                 0x00000000                        __data_size__ = SIZEOF (.data)
-                0x80000318                        __data_load_end__ = (__data_load_start__ + SIZEOF (.data))
-                0x00000001                        . = ASSERT (((__data_load_start__ == __data_load_end__) || ((__data_load_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .data is too large to fit in FLASH1 memory segment)
+                0x80000318                        __data_load_end__ = __data_end__
+                0x00000001                        . = ASSERT (((__data_start__ == __data_end__) || ((__data_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .data is too large to fit in RAM1 memory segment)
+                0x80000318                        __sdata_load_start__ = ALIGN (__data_end__, 0x4)
 
-.data_run       0x80008000        0x0
-                0x80008000                        __data_run_start__ = .
-                0x80008000                        __data_run_end__ = (__data_run_start__ + SIZEOF (.data))
-                0x00000000                        __data_run_size__ = (__data_run_end__ - __data_run_start__)
-                0x80008000                        __data_run_load_end__ = __data_run_end__
-                0x00000001                        . = ASSERT (((__data_run_start__ == __data_run_end__) || ((__data_run_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .data_run is too large to fit in RAM1 memory segment)
-                0x80008000                        __bss_load_start__ = ALIGN (__data_run_end__, 0x4)
+.sdata          0x80000318        0x0
+                0x80000318                        __sdata_start__ = .
+ *(.sdata.* .sdata2.*)
+                0x80000318                        __sdata_end__ = (__sdata_start__ + SIZEOF (.sdata))
+                0x00000000                        __sdata_size__ = SIZEOF (.sdata)
+                0x80000318                        __sdata_load_end__ = __sdata_end__
+                0x00000001                        . = ASSERT (((__sdata_start__ == __sdata_end__) || ((__sdata_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .sdata is too large to fit in RAM1 memory segment)
+                0x80000318                        __bss_load_start__ = ALIGN (__sdata_end__, 0x4)
 
-.bss            0x80008000        0x4
-                0x80008000                        __bss_start__ = .
+.bss            0x80000318        0x4
+                0x80000318                        __bss_start__ = .
  *(.bss .bss.* .gnu.linkonce.b.*)
  .bss.libc.__SEGGER_RTL_heap_globals.0
-                0x80008000        0x4 D:/Softwares/Installed/SEGGER/SEGGER Embedded Studio 8.30a/lib/heapops_basic_rv32imc_balanced.a(heapops_basic.o)
+                0x80000318        0x4 D:/Softwares/Installed/SEGGER/SEGGER Embedded Studio 8.30a/lib/heapops_basic_rv32imc_balanced.a(heapops_basic.o)
  *(COMMON)
-                0x80008004                        __bss_end__ = (__bss_start__ + SIZEOF (.bss))
+                0x8000031c                        __bss_end__ = (__bss_start__ + SIZEOF (.bss))
                 0x00000004                        __bss_size__ = SIZEOF (.bss)
-                0x80008004                        __bss_load_end__ = __bss_end__
+                0x8000031c                        __bss_load_end__ = __bss_end__
                 0x00000001                        . = ASSERT (((__bss_start__ == __bss_end__) || ((__bss_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .bss is too large to fit in RAM1 memory segment)
-                0x80008004                        __tbss_load_start__ = ALIGN (__bss_end__, 0x4)
+                0x8000031c                        __tbss_load_start__ = ALIGN (__bss_end__, 0x4)
 
-.tbss           0x80008004        0x0
-                0x80008004                        __tbss_start__ = .
+.tbss           0x8000031c        0x0
+                0x8000031c                        __tbss_start__ = .
  *(.tbss .tbss.*)
-                0x80008004                        __tbss_end__ = (__tbss_start__ + SIZEOF (.tbss))
+                0x8000031c                        __tbss_end__ = (__tbss_start__ + SIZEOF (.tbss))
                 0x00000000                        __tbss_size__ = SIZEOF (.tbss)
-                0x80008004                        __tbss_load_end__ = __tbss_end__
+                0x8000031c                        __tbss_load_end__ = __tbss_end__
                 0x00000001                        . = ASSERT (((__tbss_start__ == __tbss_end__) || ((__tbss_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .tbss is too large to fit in RAM1 memory segment)
-                0x80000318                        __tdata_load_start__ = ALIGN ((__data_load_start__ + SIZEOF (.data)), 0x4)
+                0x8000031c                        __tdata_load_start__ = ALIGN (__tbss_end__, 0x4)
 
-.tdata          0x80008004        0x0 load address 0x80000318
-                0x80008004                        __tdata_start__ = .
+.tdata          0x8000031c        0x0
+                0x8000031c                        __tdata_start__ = .
  *(.tdata .tdata.*)
-                0x80008004                        __tdata_end__ = (__tdata_start__ + SIZEOF (.tdata))
+                0x8000031c                        __tdata_end__ = (__tdata_start__ + SIZEOF (.tdata))
                 0x00000000                        __tdata_size__ = SIZEOF (.tdata)
-                0x80000318                        __tdata_load_end__ = (__tdata_load_start__ + SIZEOF (.tdata))
-                0x00000001                        . = ASSERT (((__tdata_load_start__ == __tdata_load_end__) || ((__tdata_load_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .tdata is too large to fit in FLASH1 memory segment)
+                0x8000031c                        __tdata_load_end__ = __tdata_end__
+                0x00000001                        . = ASSERT (((__tdata_start__ == __tdata_end__) || ((__tdata_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .tdata is too large to fit in RAM1 memory segment)
+                0x8000031c                        __sbss_load_start__ = ALIGN (__tdata_end__, 0x4)
 
-.tdata_run      0x80008004        0x0
-                0x80008004                        __tdata_run_start__ = .
-                0x80008004                        __tdata_run_end__ = (__tdata_run_start__ + SIZEOF (.tdata))
-                0x00000000                        __tdata_run_size__ = (__tdata_run_end__ - __tdata_run_start__)
-                0x80008004                        __tdata_run_load_end__ = __tdata_run_end__
-                0x00000001                        . = ASSERT (((__tdata_run_start__ == __tdata_run_end__) || ((__tdata_run_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .tdata_run is too large to fit in RAM1 memory segment)
-                0x80000318                        __sdata_load_start__ = ALIGN ((__tdata_load_start__ + SIZEOF (.tdata)), 0x4)
-
-.sdata          0x80008004        0x0 load address 0x80000318
-                0x80008004                        __sdata_start__ = .
- *(.sdata.* .sdata2.*)
-                0x80008004                        __sdata_end__ = (__sdata_start__ + SIZEOF (.sdata))
-                0x00000000                        __sdata_size__ = SIZEOF (.sdata)
-                0x80000318                        __sdata_load_end__ = (__sdata_load_start__ + SIZEOF (.sdata))
-                0x80000318                        __FLASH1_segment_used_end__ = (ALIGN ((__tdata_load_start__ + SIZEOF (.tdata)), 0x4) + SIZEOF (.sdata))
-                0x00000318                        __FLASH1_segment_used_size__ = (__FLASH1_segment_used_end__ - __FLASH1_segment_start__)
-                0x00000001                        . = ASSERT (((__sdata_load_start__ == __sdata_load_end__) || ((__sdata_load_end__ - __FLASH1_segment_start__) <= __FLASH1_segment_size__)), error: .sdata is too large to fit in FLASH1 memory segment)
-
-.sdata_run      0x80008004        0x0
-                0x80008004                        __sdata_run_start__ = .
-                0x80008004                        __sdata_run_end__ = (__sdata_run_start__ + SIZEOF (.sdata))
-                0x00000000                        __sdata_run_size__ = (__sdata_run_end__ - __sdata_run_start__)
-                0x80008004                        __sdata_run_load_end__ = __sdata_run_end__
-                0x00000001                        . = ASSERT (((__sdata_run_start__ == __sdata_run_end__) || ((__sdata_run_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .sdata_run is too large to fit in RAM1 memory segment)
-                0x80008004                        __sbss_load_start__ = ALIGN (__sdata_run_end__, 0x4)
-
-.sbss           0x80008004        0x0
-                0x80008004                        __sbss_start__ = .
+.sbss           0x8000031c        0x0
+                0x8000031c                        __sbss_start__ = .
  *(.sbss .sbss.*)
-                0x80008004                        __sbss_end__ = (__sbss_start__ + SIZEOF (.sbss))
+                0x8000031c                        __sbss_end__ = (__sbss_start__ + SIZEOF (.sbss))
                 0x00000000                        __sbss_size__ = SIZEOF (.sbss)
-                0x80008004                        __sbss_load_end__ = __sbss_end__
+                0x8000031c                        __sbss_load_end__ = __sbss_end__
                 0x00000001                        . = ASSERT (((__sbss_start__ == __sbss_end__) || ((__sbss_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .sbss is too large to fit in RAM1 memory segment)
-                0x80008004                        __non_init_load_start__ = ALIGN (__sbss_end__, 0x4)
+                0x8000031c                        __non_init_load_start__ = ALIGN (__sbss_end__, 0x4)
 
-.non_init       0x80008004        0x0
-                0x80008004                        __non_init_start__ = .
+.non_init       0x8000031c        0x0
+                0x8000031c                        __non_init_start__ = .
  *(.non_init .non_init.*)
-                0x80008004                        __non_init_end__ = (__non_init_start__ + SIZEOF (.non_init))
+                0x8000031c                        __non_init_end__ = (__non_init_start__ + SIZEOF (.non_init))
                 0x00000000                        __non_init_size__ = SIZEOF (.non_init)
-                0x80008004                        __non_init_load_end__ = __non_init_end__
+                0x8000031c                        __non_init_load_end__ = __non_init_end__
                 0x00000001                        . = ASSERT (((__non_init_start__ == __non_init_end__) || ((__non_init_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .non_init is too large to fit in RAM1 memory segment)
-                0x80008010                        __heap_load_start__ = ALIGN (__non_init_end__, 0x10)
+                0x80000320                        __heap_load_start__ = ALIGN (__non_init_end__, 0x10)
 
-.heap           0x80008010      0x800
-                0x80008010                        __heap_start__ = .
+.heap           0x80000320      0x800
+                0x80000320                        __heap_start__ = .
  *(.heap .heap.*)
-                0x80008810                        . = ALIGN (MAX ((__heap_start__ + __HEAPSIZE__), .), 0x10)
- *fill*         0x80008010      0x800 
-                0x80008810                        __heap_end__ = (__heap_start__ + SIZEOF (.heap))
+                0x80000b20                        . = ALIGN (MAX ((__heap_start__ + __HEAPSIZE__), .), 0x10)
+ *fill*         0x80000320      0x800 
+                0x80000b20                        __heap_end__ = (__heap_start__ + SIZEOF (.heap))
                 0x00000800                        __heap_size__ = SIZEOF (.heap)
-                0x80008810                        __heap_load_end__ = __heap_end__
+                0x80000b20                        __heap_load_end__ = __heap_end__
                 0x00000001                        . = ASSERT (((__heap_start__ == __heap_end__) || ((__heap_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .heap is too large to fit in RAM1 memory segment)
                 0x00000001                        . = ASSERT ((__HEAPSIZE__ == ALIGN (__HEAPSIZE__, 0x10)), error: .heap section size does not match alignment)
                 0x00000001                        . = ASSERT ((__heap_size__ <= __HEAPSIZE__), error: .heap section is larger than specified size)
@@ -2422,7 +2392,7 @@ Linker script and memory map
                 0x00000800                        __stack_size__ = SIZEOF (.stack)
                 0x80010000                        __stack_load_end__ = __stack_end__
                 0x80010000                        __RAM1_segment_used_end__ = ((__RAM1_segment_start__ + (__RAM1_segment_size__ - 0x800)) + SIZEOF (.stack))
-                0x00008000                        __RAM1_segment_used_size__ = (__RAM1_segment_used_end__ - __RAM1_segment_start__)
+                0x00010000                        __RAM1_segment_used_size__ = (__RAM1_segment_used_end__ - __RAM1_segment_start__)
                 0x00000001                        . = ASSERT (((__stack_start__ == __stack_end__) || ((__stack_end__ - __RAM1_segment_start__) <= __RAM1_segment_size__)), error: .stack is too large to fit in RAM1 memory segment)
                 0x00000001                        . = ASSERT ((__heap_end__ <= __stack_start__), error: section .heap overlaps absolute placed section .stack)
                 0x00000001                        . = ASSERT ((__STACKSIZE__ == ALIGN (__STACKSIZE__, 0x4)), error: .stack section size does not match alignment)
