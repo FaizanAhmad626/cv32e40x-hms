@@ -6,6 +6,7 @@
 # Clock Signal
 set_property -dict { PACKAGE_PIN AD11  IOSTANDARD LVDS     } [get_ports { clk_n_i }]; #IO_L12N_T1_MRCC_33 Sch=sysclk_n
 set_property -dict { PACKAGE_PIN AD12  IOSTANDARD LVDS     } [get_ports { clk_p_i }]; #IO_L12P_T1_MRCC_33 Sch=sysclk_p
+create_clock -period 5.000 -name sys_clk [get_ports clk_p_i]
 
 ## Buttons
 #set_property -dict { PACKAGE_PIN E18   IOSTANDARD LVCMOS12 } [get_ports { btnc }]; #IO_25_17 Sch=btnc
