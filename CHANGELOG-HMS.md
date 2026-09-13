@@ -6,6 +6,22 @@ Versions are tagged `hms-v*` to keep them distinct from the upstream core
 tags (`0.1.0` through `0.10.0`), which belong to OpenHW and stop at the fork
 point.
 
+## hms-v0.3.2 - 2026-09-13
+
+- Added an SCU35 FPGA project at `fpga/scu35/`, targeting the AMD Spartan
+  UltraScale+ XCSU35P on the SCU35 evaluation board. Same RTL as the
+  Genesys-2 build, retargeted to `xcsu35p-sbvb625-2-e` with the board's
+  100 MHz LVDS clock downconverted to 50 MHz
+- Post-route utilisation: 3906 LUT (24%), 2294 FF (7%), 16 BRAM (33%),
+  3 DSP (6%). 45 DSP slices and 144 KB of BRAM remain free
+- Timing at 50 MHz: WNS +8.197 ns over 7360 endpoints, critical path
+  11.694 ns, of which 8.06 ns is routing. Slower than the Genesys-2's
+  9.899 ns, but measured with large slack, so this is an upper bound on
+  delay rather than the achievable floor
+- Known incomplete: `fpga/scu35/constraints/` has no XDC, so `write_bitstream`
+  fails on DRC NSTD-1 and UCIO-1. Pin locations, I/O standards, and an
+  explicit `create_clock` are still to be written
+
 ## hms-v0.3.1 - 2026-09-10
 
 - Linked the SEGGER build into a single memory region: replaced the stock

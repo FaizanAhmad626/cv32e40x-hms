@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="cv32e40x_wrapper_genesys2_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="cv32e40x_pkg" />
+            <top_module name="cv32e40x_wrapper_genesys2" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="153.924 ns"></ZoomStartTime>
+      <ZoomEndTime time="399.725 ns"></ZoomEndTime>
+      <Cursor1Time time="400.000 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="276"></NameColumnWidth>
+      <ValueColumnWidth column_width="96"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="23" />
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/clk_p_i" type="logic">
+      <obj_property name="ElementShortName">clk_p_i</obj_property>
+      <obj_property name="ObjectShortName">clk_p_i</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/clk_n_i" type="logic">
+      <obj_property name="ElementShortName">clk_n_i</obj_property>
+      <obj_property name="ObjectShortName">clk_n_i</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/rst_ni" type="logic">
+      <obj_property name="ElementShortName">rst_ni</obj_property>
+      <obj_property name="ObjectShortName">rst_ni</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/clk_50M_s" type="logic">
+      <obj_property name="ElementShortName">clk_50M_s</obj_property>
+      <obj_property name="ObjectShortName">clk_50M_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/clk_200M_s" type="logic">
+      <obj_property name="ElementShortName">clk_200M_s</obj_property>
+      <obj_property name="ObjectShortName">clk_200M_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/rst_ns" type="logic">
+      <obj_property name="ElementShortName">rst_ns</obj_property>
+      <obj_property name="ObjectShortName">rst_ns</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/instr_req_s" type="logic">
+      <obj_property name="ElementShortName">instr_req_s</obj_property>
+      <obj_property name="ObjectShortName">instr_req_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/instr_gnt_s" type="logic">
+      <obj_property name="ElementShortName">instr_gnt_s</obj_property>
+      <obj_property name="ObjectShortName">instr_gnt_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/instr_rvalid_s" type="logic">
+      <obj_property name="ElementShortName">instr_rvalid_s</obj_property>
+      <obj_property name="ObjectShortName">instr_rvalid_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/instr_addr_s" type="array">
+      <obj_property name="ElementShortName">instr_addr_s[31:0]</obj_property>
+      <obj_property name="ObjectShortName">instr_addr_s[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/instr_rdata_s" type="array">
+      <obj_property name="ElementShortName">instr_rdata_s[31:0]</obj_property>
+      <obj_property name="ObjectShortName">instr_rdata_s[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/instr_err_s" type="logic">
+      <obj_property name="ElementShortName">instr_err_s</obj_property>
+      <obj_property name="ObjectShortName">instr_err_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/data_req_s" type="logic">
+      <obj_property name="ElementShortName">data_req_s</obj_property>
+      <obj_property name="ObjectShortName">data_req_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/data_gnt_s" type="logic">
+      <obj_property name="ElementShortName">data_gnt_s</obj_property>
+      <obj_property name="ObjectShortName">data_gnt_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/data_rvalid_s" type="logic">
+      <obj_property name="ElementShortName">data_rvalid_s</obj_property>
+      <obj_property name="ObjectShortName">data_rvalid_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/data_addr_s" type="array">
+      <obj_property name="ElementShortName">data_addr_s[31:0]</obj_property>
+      <obj_property name="ObjectShortName">data_addr_s[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/data_be_s" type="array">
+      <obj_property name="ElementShortName">data_be_s[3:0]</obj_property>
+      <obj_property name="ObjectShortName">data_be_s[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/data_we_s" type="logic">
+      <obj_property name="ElementShortName">data_we_s</obj_property>
+      <obj_property name="ObjectShortName">data_we_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/data_wdata_s" type="array">
+      <obj_property name="ElementShortName">data_wdata_s[31:0]</obj_property>
+      <obj_property name="ObjectShortName">data_wdata_s[31:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/data_rdata_s" type="array">
+      <obj_property name="ElementShortName">data_rdata_s[31:0]</obj_property>
+      <obj_property name="ObjectShortName">data_rdata_s[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/data_err_s" type="logic">
+      <obj_property name="ElementShortName">data_err_s</obj_property>
+      <obj_property name="ObjectShortName">data_err_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/fetch_enable_s" type="logic">
+      <obj_property name="ElementShortName">fetch_enable_s</obj_property>
+      <obj_property name="ObjectShortName">fetch_enable_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/cv32e40x_wrapper_genesys2/core_sleep_s" type="logic">
+      <obj_property name="ElementShortName">core_sleep_s</obj_property>
+      <obj_property name="ObjectShortName">core_sleep_s</obj_property>
+   </wvobject>
+</wave_config>
