@@ -53,7 +53,7 @@ parameter int unsigned  MEM_DEPTH           = 16384             // 16384 x 32-bi
     input   logic           clk_n_i,    // Clock signal
     input   logic           rst_ni,     // Active-low asynchronous reset 
     
-    output  logic   [7:0]   led_o       // LED signals
+    output  logic   [4:0]   led_o       // LED signals
     );  
 
 
@@ -73,8 +73,9 @@ This signal should be 0 during normal / functional operation.
 */
 logic   scan_cg_en_s;   // Scan clock gate enable
 logic   clk_50M_s;      // Downconverted clock signal to initially meet timing requirements    
-logic   clk_200M_s;     // Single-ended clock signal    
+logic   clk_100M_s;     // Single-ended clock signal    
 logic   rst_ns;         // Synchronized reset signal    
+logic   locked_s;       // Clocking Wizard clock locked signal    
 
 // ---------------------------------------------------------------------------
 //  Static configuration
@@ -264,7 +265,7 @@ logic        led_we_s;
 logic [31:0] led_wdata_s;
 logic [31:0] led_rdata_s;
 logic        led_err_s;
-logic [ 7:0] led_pins_s;
+logic [ 3:0] led_pins_s;
 
 // ---------------------------------------------------------------------------
 // LED Signals
@@ -295,7 +296,7 @@ assign clic_irq_shv_s       =  1'b0;
 assign debug_req_s          =  1'b0;                    // disable debug mode
 assign fencei_flush_ack_s   =  fencei_flush_req_s;      // to avoid stalling fence.i instructions indefinitely
 assign fetch_enable_s       =  1'b1;                    // enable instruction fetch
-assign led_o = { heartbeat_q[25], led_pins_s[6:0] };    // LED signals
+assign led_o = { heartbeat_q[25], led_pins_s[3:0] };    // LED signals
 
 always_ff @(posedge clk_50M_s or negedge rst_ns) begin
   if (!rst_ns) heartbeat_q <= '0;
@@ -309,7 +310,6 @@ end
 // ---------------------------------------------------------------------------
 
 IBUFDS #(
-    .DIFF_TERM ("TRUE"),
     .IOSTANDARD("LVDS")
   ) u_ibufds_sysclk (
     .I  (clk_p_i),
@@ -320,18 +320,19 @@ IBUFDS #(
 clk_wiz_0 clock_downconverter
    (
     // Clock out ports
-    .clk_out1   (   clk_50M_s   ),  // output clk_out1
+    .clk_out1   (   clk_50M_s   ),
     // Status and control signals
-    .resetn     (   rst_ni      ),  // input resetn
-   // Clock in ports
-    .clk_in1    (   clk_100M_s  )   // input clk_in1
+    .locked     (   locked_s    ),
+    // Clock in ports
+    .clk_in1    (   clk_100M_s  )
 );
 
-reset_synchronizer reset_synchronizer
+reset_synchronizer reset_synchronizer_inst
 (
-    .clk_i  (   clk_50M_s   ),
-    .rst_ni (   rst_ni      ),
-    .rst_no (   rst_ns      )
+    .clk_i  	(   clk_50M_s   ),
+    .rst_ni 	(   rst_ni      ),
+	.locked_i	(	locked_s	),
+    .rst_no 	(   rst_ns      )
 );
 
 cv32e40x_if_xif ext_if ();
@@ -473,7 +474,7 @@ obi_data_interconnect
     .MEM_BASE   (   MEM_BASE        ),
     .LED_BASE   (   LED_BASE        )
 )
-obi_data_interconnect
+obi_data_interconnect_inst
 (
     .clk_i          (   clk_50M_s       ),
     .rst_ni         (   rst_ns          ),
@@ -524,9 +525,9 @@ obi_data_interconnect
 
 led_peripheral
 #(
-    .NUM_LEDS   (   7   )
+    .NUM_LEDS   (   4   )
 )
-led_peripheral
+led_peripheral_inst
 (
     .clk_i      (   clk_50M_s       ),
     .rst_ni     (   rst_ns          ),

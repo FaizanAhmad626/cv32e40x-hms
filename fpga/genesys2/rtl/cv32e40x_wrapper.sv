@@ -5,7 +5,7 @@
 // 
 // Create Date: 06/12/2026 04:08:12 PM
 // Design Name: 
-// Module Name: cv32e40x_wrapper_genesys2
+// Module Name: cv32e40x_wrapper
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module cv32e40x_wrapper_genesys2 import cv32e40x_pkg::*;
+module cv32e40x_wrapper import cv32e40x_pkg::*;
 #(
 // ---------------------------------------------------------------------------
 // Address map. These values are duplicated in software and in the BRAM IP

@@ -15,7 +15,7 @@
 
 module led_peripheral
 #(
-    parameter integer   NUM_LEDS    =   8
+    parameter integer   NUM_LEDS    =   5
 )
 (
     input   logic                   clk_i,

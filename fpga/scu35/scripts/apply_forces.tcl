@@ -32,4 +32,4 @@ add_force $rst_path {0 0ns} {1 100ns}
 
 puts "INFO: forced $clk_p_path/$clk_n_path (100 MHz differential) and $rst_path (releases at 100 ns)"
 
-run 1000ns
+run 5ms

@@ -2202,9 +2202,9 @@ Linker script and memory map
                 0x800001c4                        __text_start__ = .
  *(.text .text.* .gnu.linkonce.t.*)
  .text.delay    0x800001c4       0x22 Output/Debug/Obj/led_demo/main.o
- .text.main     0x800001e6       0x38 Output/Debug/Obj/led_demo/main.o
+ .text.main     0x800001e6       0x36 Output/Debug/Obj/led_demo/main.o
                 0x800001e6                main
- *fill*         0x8000021e       0x62 
+ *fill*         0x8000021c       0x64 
  .text.trap_entry
                 0x80000280       0x82 Output/Debug/Obj/led_demo/riscv_crt0.o
                 0x80000280                trap_entry

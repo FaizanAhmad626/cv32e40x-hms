@@ -33,7 +33,7 @@ int main(void)
     for (;;) {
         LED_REG = pattern;
         delay();
-        pattern = (pattern == 0x40u) ? 0x01u
+        pattern = (pattern == 0x10u) ? 0x01u
                                      : (unsigned char)(pattern << 1);
     }
 

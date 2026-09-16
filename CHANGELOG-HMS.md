@@ -6,6 +6,30 @@ Versions are tagged `hms-v*` to keep them distinct from the upstream core
 tags (`0.1.0` through `0.10.0`), which belong to OpenHW and stop at the fork
 point.
 
+## hms-v0.4.0 - 2026-09-16
+
+- SCU35 build now runs on hardware: bitstream generates cleanly and the LED
+  demo plus heartbeat run on the board. Closes the missing-XDC gap noted in
+  hms-v0.3.2
+- Added `fpga/scu35/constraints/EK_SCU35_RevB3.xdc`, the AMD master file with
+  every line commented out except the ports in use: `clk_p_i`/`clk_n_i` as
+  `LVDS` with `DIFF_TERM_ADV TERM_100`, `led_o[4:0]` and `rst_ni` as
+  `LVCMOS33` (bank 45 at its default 3.3 V, J55 open)
+- Clocking Wizard set to `PRIM_SOURCE No_buffer` since the wrapper's `IBUFDS`
+  already buffers the clock, removing the redundant IBUF. `locked` output
+  enabled; the wizard resolves to a PLL
+- Replaced the single-flop `reset_synchronizer` with a two-flop
+  synchroniser, asserted asynchronously and released synchronously, gated
+  by `rst_ni & locked` so the core stays in reset until the clock is stable
+- LED peripheral reduced to 4 bits on the SCU35; `led_o[4]` is the
+  heartbeat. SEGGER demo pattern shortened to match
+- Simulation run extended to 5 ms so the core leaves reset after PLL lock
+- Post-route utilisation: 3643 LUT (22%), 2285 FF (7%), 16 BRAM (33%),
+  3 DSP (6%)
+- Timing at 50 MHz: WNS +9.080 ns over 7331 endpoints, no critical warnings
+- Renamed the Genesys-2 wrapper to `cv32e40x_wrapper.sv` and removed the
+  unused SCU35 `led_demo.coe`
+
 ## hms-v0.3.2 - 2026-09-13
 
 - Added an SCU35 FPGA project at `fpga/scu35/`, targeting the AMD Spartan
