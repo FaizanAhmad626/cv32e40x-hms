@@ -29,7 +29,8 @@ set core_rtl_dir "$repo_root/rtl"
 set fpga_root    "$repo_root/fpga/scu35"
 set fpga_rtl_dir "$fpga_root/rtl"
 set fpga_xdc_dir "$fpga_root/constraints"
-set coe_file     "$fpga_root/mem_init_file/led_demo_segger.coe"
+# Program preloaded into the BRAM. Swap the file name to run another app.
+set coe_file     "$fpga_root/mem_init_file/uart_demo.coe"
 set proj_dir     "$fpga_root/vivado_proj"
 set wcfg_file    "$fpga_root/waveform_file/cv32e40x_wrapper_behav.wcfg"
 
@@ -113,7 +114,7 @@ puts "INFO: adding [llength $core_rtl_files] core RTL files"
 add_files -norecurse -fileset sources_1 $core_rtl_files
 
 # ------------------------------------------------------------------------
-# 6. Add the CV32E40X wrapper and memory controller
+# 6. Add the wrapper, interconnect and peripherals (everything in rtl/)
 # ------------------------------------------------------------------------
 set fpga_rtl_files [find_hdl_files $fpga_rtl_dir]
 puts "INFO: adding [llength $fpga_rtl_files] wrapper RTL files"

@@ -621,14 +621,14 @@ set_property IOSTANDARD  LVCMOS33 [get_ports "rst_ni"] ;# Bank  66 VCCO - VR_VCC
 # set_property IOSTANDARD  LVCMOSxx [get_ports "ENET_RX_ER_GPIO"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L5P_65
 # set_property PACKAGE_PIN AA5      [get_ports "CLICK1_TX"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L18N_D21_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "CLICK1_TX"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L18N_D21_65
-# set_property PACKAGE_PIN AC6      [get_ports "SCU35_UARTB_RXD"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L11N_D20_65
-# set_property IOSTANDARD  LVCMOSxx [get_ports "SCU35_UARTB_RXD"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L11N_D20_65
+set_property PACKAGE_PIN AC6      [get_ports "uart_rx_i"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L11N_D20_65
+set_property IOSTANDARD  LVCMOS33 [get_ports "uart_rx_i"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L11N_D20_65
 # set_property PACKAGE_PIN AE5      [get_ports "MII_RXD1"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L4N_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "MII_RXD1"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L4N_65
 # set_property PACKAGE_PIN AA6      [get_ports "CLICK1_SDA"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L18P_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "CLICK1_SDA"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L18P_65
-# set_property PACKAGE_PIN AB6      [get_ports "SCU35_UARTB_TXD"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L11P_65
-# set_property IOSTANDARD  LVCMOSxx [get_ports "SCU35_UARTB_TXD"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L11P_65
+set_property PACKAGE_PIN AB6      [get_ports "uart_tx_o"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L11P_65
+set_property IOSTANDARD  LVCMOS33 [get_ports "uart_tx_o"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L11P_65
 # set_property PACKAGE_PIN AE6      [get_ports "MII_RXD2"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L4P_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "MII_RXD2"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L4P_65
 # set_property PACKAGE_PIN AA7      [get_ports "CLICK1_INT"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L17N_D23_65
@@ -667,3 +667,13 @@ set_property IOSTANDARD  LVCMOS33 [get_ports "rst_ni"] ;# Bank  66 VCCO - VR_VCC
 # set_property IOSTANDARD  LVCMOSxx [get_ports "MII_TXD2"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L8P_D31_65
 # set_property PACKAGE_PIN AA9      [get_ports "MII_MDIO_DATA"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L1P_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "MII_MDIO_DATA"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L1P_65
+# ------------------------------------------------------------------------
+# HMS: UART on FT4232 port B (SCU35_UARTB, the second USB serial interface).
+# uart_rx_i = SCU35_UARTB_RXD (AC6), uart_tx_o = SCU35_UARTB_TXD (AB6),
+# set in place above. The pins are asynchronous to every clock in the
+# design: RX goes through a 2-flop synchroniser in uart_rx, and TX is a
+# registered output that nothing times against.
+# ------------------------------------------------------------------------
+set_false_path -from [get_ports uart_rx_i]
+set_false_path -to   [get_ports uart_tx_o]
+set_property PULLUP true [get_ports uart_rx_i]
