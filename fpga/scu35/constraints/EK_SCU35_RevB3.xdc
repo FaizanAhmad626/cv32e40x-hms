@@ -105,8 +105,8 @@ set_property PACKAGE_PIN E23      [get_ports "clk_n_i"] ;# Bank  46 VCCO - VR_VC
 set_property IOSTANDARD  LVDS [get_ports "clk_n_i"] ;# Bank  46 VCCO - VR_VCCO_47_1V8 - IO_L14N_T2L_N3_GC_46
 set_property PACKAGE_PIN F23      [get_ports "clk_p_i"] ;# Bank  46 VCCO - VR_VCCO_47_1V8 - IO_L14P_T2L_N2_GC_46
 set_property IOSTANDARD  LVDS [get_ports "clk_p_i"] ;# Bank  46 VCCO - VR_VCCO_47_1V8 - IO_L14P_T2L_N2_GC_46
-create_clock -period 10.000 -name SYSTEM_R_CLK_P [get_ports clk_p_i]
-set_property DIFF_TERM_ADV TERM_100 [get_ports {clk_p_i clk_n_i}]
+create_clock -period 10.000 -name SYSTEM_R_CLK_P [get_ports clk_p_i] ;# 100 MHz board clock on the LVDS pair. Without this, almost nothing in the design is timed
+# set_property DIFF_TERM_ADV TERM_100 [get_ports {clk_p_i clk_n_i}] ;# on-die 100 ohm differential termination for the LVDS clock pair
 # set_property PACKAGE_PIN F24      [get_ports "HPIO_LB_IO1_N"] ;# Bank  46 VCCO - VR_VCCO_47_1V8 - IO_L13N_T2L_N1_GC_QBC_46
 # set_property IOSTANDARD  LVCMOSxx [get_ports "HPIO_LB_IO1_N"] ;# Bank  46 VCCO - VR_VCCO_47_1V8 - IO_L13N_T2L_N1_GC_QBC_46
 # set_property PACKAGE_PIN G24      [get_ports "HPIO_LB_IO1_P"] ;# Bank  46 VCCO - VR_VCCO_47_1V8 - IO_L13P_T2L_N0_GC_QBC_46
@@ -623,12 +623,15 @@ set_property IOSTANDARD  LVCMOS33 [get_ports "rst_ni"] ;# Bank  66 VCCO - VR_VCC
 # set_property IOSTANDARD  LVCMOSxx [get_ports "CLICK1_TX"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L18N_D21_65
 set_property PACKAGE_PIN AC6      [get_ports "uart_rx_i"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L11N_D20_65
 set_property IOSTANDARD  LVCMOS33 [get_ports "uart_rx_i"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L11N_D20_65
+# set_false_path -from [get_ports uart_rx_i] ;# asynchronous input, resynchronised by the two flops in uart_rx, so it is not timed against sys_clk
+set_property PULLUP true [get_ports uart_rx_i] ;# holds RX idle-high when nothing is plugged in, so line noise is not read as start bits
 # set_property PACKAGE_PIN AE5      [get_ports "MII_RXD1"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L4N_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "MII_RXD1"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L4N_65
 # set_property PACKAGE_PIN AA6      [get_ports "CLICK1_SDA"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L18P_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "CLICK1_SDA"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L18P_65
 set_property PACKAGE_PIN AB6      [get_ports "uart_tx_o"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L11P_65
 set_property IOSTANDARD  LVCMOS33 [get_ports "uart_tx_o"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L11P_65
+# set_false_path -to   [get_ports uart_tx_o] ;# registered output, and nothing on the board times it against sys_clk
 # set_property PACKAGE_PIN AE6      [get_ports "MII_RXD2"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L4P_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "MII_RXD2"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L4P_65
 # set_property PACKAGE_PIN AA7      [get_ports "CLICK1_INT"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L17N_D23_65
@@ -667,13 +670,3 @@ set_property IOSTANDARD  LVCMOS33 [get_ports "uart_tx_o"] ;# Bank  65 VCCO - VR_
 # set_property IOSTANDARD  LVCMOSxx [get_ports "MII_TXD2"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L8P_D31_65
 # set_property PACKAGE_PIN AA9      [get_ports "MII_MDIO_DATA"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L1P_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "MII_MDIO_DATA"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L1P_65
-# ------------------------------------------------------------------------
-# HMS: UART on FT4232 port B (SCU35_UARTB, the second USB serial interface).
-# uart_rx_i = SCU35_UARTB_RXD (AC6), uart_tx_o = SCU35_UARTB_TXD (AB6),
-# set in place above. The pins are asynchronous to every clock in the
-# design: RX goes through a 2-flop synchroniser in uart_rx, and TX is a
-# registered output that nothing times against.
-# ------------------------------------------------------------------------
-set_false_path -from [get_ports uart_rx_i]
-set_false_path -to   [get_ports uart_tx_o]
-set_property PULLUP true [get_ports uart_rx_i]

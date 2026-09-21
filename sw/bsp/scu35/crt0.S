@@ -9,7 +9,7 @@
  *   0x8000_0100  trap handler, 128-byte aligned (mtvec[6:2] is hardwired 0)
  *   0x8001_0000  top of memory, stack grows down from here
  *   0x1000_0000  LED register
- *   0x1001_0000  UART (see uart.h)
+ *   0x1001_0000  UART (see sw/apps/uart_demo/uart.h)
  */
 
     .equ LED_ADDR,  0x10000000      /* LED register address                 */

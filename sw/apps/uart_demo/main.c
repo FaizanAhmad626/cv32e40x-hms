@@ -21,7 +21,7 @@ int main(void)
     uart_puthex(UART_BAUDDIV);
     uart_puts("\nSTATUS  = 0x");
     uart_puthex(UART_STATUS);
-    uart_puts("\nType something, it will be echoed.\n> ");
+    //uart_puts("\nType something, it will be echoed.\n> ");
 
     for (;;) {
         int c = uart_getc();
