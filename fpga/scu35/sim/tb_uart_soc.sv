@@ -5,7 +5,7 @@
 // CV32E40X and checks the pins.
 //
 //   1. Decode uart_tx_o and wait for the banner line.
-//   2. Send "Hi\r" into uart_rx_i and check the echo "Hi\r\n> ".
+//   2. Send "Hi\r" into uart_rx_i and check the echo "Hi\015\n> ".
 //   3. Check the LEDs show 0xD, the low nibble of the last character sent
 //      ('\r'). A trap would show 0xA instead (crt0 writes 0xAA).
 //
@@ -110,7 +110,7 @@ initial begin
     rst_n = 1'b1;
 
     // Banner: ~130 chars at ~11.5 kchar/s is ~12 ms of wire time.
-    wait_for("Type something, it will be echoed.\r\n> ", 60);
+    wait_for("Type something, it will be echoed.\015\n> ", 60);
     if (!contains(rx_log, "BAUDDIV = 0x000001B2")) begin
         $display("\nFAIL: BAUDDIV readback wrong (expected 0x1B2 = 434)");
         errors++;
@@ -126,7 +126,7 @@ initial begin
     host_send("H");
     host_send("i");
     host_send(8'h0D);
-    wait_for("Hi\r\n> ", 10);
+    wait_for("Hi\015\n> ", 10);
 
     if (led[3:0] !== 4'hD) begin
         $display("\nFAIL: LEDs show %h, expected D (low nibble of CR)", led[3:0]);
