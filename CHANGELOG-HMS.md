@@ -6,6 +6,52 @@ Versions are tagged `hms-v*` to keep them distinct from the upstream core
 tags (`0.1.0` through `0.10.0`), which belong to OpenHW and stop at the fork
 point.
 
+## hms-v0.5.0 - 2026-09-21
+
+- UART running on the SCU35: banner, register readback and echo over the
+  FT4232's second serial port (port B) at 115200 8N1, verified with PuTTY.
+  The low nibble of each received character is shown on the LEDs
+- Rewrote `obi_data_interconnect` as a table-driven N-slave interconnect:
+  `NUM_SLAVES`, `SLV_BASE` and `SLV_MASK` parameters, parallel
+  `(addr & mask) == base` decode, priority encoder, one-hot `slv_req_o` and
+  a broadcast payload. The slave select is registered on `req & gnt`, so
+  the response is routed correctly while the next address is on the bus.
+  An unmapped address is granted and answered with `err`, so the core
+  traps instead of hanging
+- Added `uart_peripheral` at `0x1001_0000` in slot 2, built from new
+  `uart_tx`, `uart_rx` and two 16-entry `sync_fifo`s. Registers `DATA`,
+  `STATUS`, `BAUDDIV` and `IRQ_EN` at `+0x00/04/08/0C`; any other offset
+  returns a bus error. `OVERRUN` and `FRAME_ERR` are sticky,
+  write-1-to-clear
+- `uart_rx` uses a two-flop synchroniser, re-checks the start bit at
+  half a bit, and samples mid-bit. `BAUDDIV` resets to 434, which is
+  115207 baud from 50 MHz (0.006% error)
+- Wrapper: new `UART_BASE`, `UART_BAUD` and `SYS_CLK_HZ` parameters and
+  `uart_rx_i`/`uart_tx_o` ports, with the address map expressed as
+  `SLV_MEM`/`SLV_LED`/`SLV_UART` table rows over a shared 64 KB
+  `SLOT_MASK`
+- XDC: `uart_rx_i` on AC6 and `uart_tx_o` on AB6, `LVCMOS33` in bank 65.
+  `PULLUP` on RX so a disconnected cable idles high, false paths on both
+  pins, and comments on the clock, termination and UART constraints
+- Software: polled driver (`uart_init`, `uart_putc`, `uart_puts`,
+  `uart_puthex`, `uart_getc`, `uart_try_getc`, `uart_flush`) moved from
+  `sw/bsp/scu35` into `sw/apps/uart_demo`, plus a SEGGER build at
+  `sw/apps/segger/uart_demo`. `create_project_scu35.tcl` now preloads
+  `uart_demo_segger.coe`
+- Simulation: added `tb_uart_periph` (peripheral and interconnect alone,
+  TX looped back to RX, covering overrun, framing error, interrupts and
+  bus errors) and `tb_uart_soc` (whole SoC running `uart_demo`, checked at
+  the pins). `tb_uart_soc` passes in Vivado xsim with the real
+  `blk_mem_gen_0` and `clk_wiz_0`; about 12 minutes of wall time
+- Fixed `tb_uart_soc` for xsim: carriage return is now written `\015`.
+  `\r` is not a standard SystemVerilog escape, and xsim read it as the
+  letter `r`
+- Known: `irq_o` is not yet routed to the core, so the driver polls.
+  `uart.c`/`uart.h` exist twice (GCC app and SEGGER project), and
+  `SYS_CLK_HZ` is defined in both the wrapper and `uart.h`. The GCC
+  `main.c` has the "Type something" prompt commented out while the SEGGER
+  build keeps it, which `tb_uart_soc` depends on
+
 ## hms-v0.4.0 - 2026-09-16
 
 - SCU35 build now runs on hardware: bitstream generates cleanly and the LED
