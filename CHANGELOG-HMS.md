@@ -6,7 +6,54 @@ Versions are tagged `hms-v*` to keep them distinct from the upstream core
 tags (`0.1.0` through `0.10.0`), which belong to OpenHW and stop at the fork
 point.
 
-## hms-v0.5.0 - 2026-09-21
+## hms-v0.6.0 - 2026-09-26 - SPI master on the SCU35, verified in xsim and over a PMOD loopback on hardware
+
+- SPI running on the SCU35: with a jumper from MOSI to MISO on PMOD1 (J13,
+  silkscreen pins 3 and 5), `spi_demo` passes all four modes at 1 MHz and at
+  6.25 MHz, reported over FT4232 port B at 115200 8N1 and on the LEDs
+- Added `spi_master`: 8-bit MSB-first shift engine for modes 0 to 3, all
+  outputs from flops. SCLK = fclk / (2 * CLKDIV), with CLKDIV raised to 4
+  when set lower, because MISO passes a two-flop synchroniser and the
+  remaining 2 cycles (40 ns at 50 MHz) are the round-trip budget. Ceiling
+  6.25 MHz. One XOR covers the modes: `sample = leading ^ cpha`
+- Added `spi_peripheral` at `0x1002_0000` in slot 3: `DATA`, `STATUS`,
+  `CTRL`, `CLKDIV`, `CS` and `IRQ_EN` at `+0x00` to `+0x14`, two 16-entry
+  `sync_fifo`s (the UART's), `RX_OVERRUN` sticky and write-1-to-clear, chip
+  select driven from a register. `CLKDIV` resets to 25 (1 MHz). Any other
+  offset returns a bus error
+- Wrapper: new `SPI_BASE` and `SPI_SCLK_HZ` parameters, `SLV_SPI` table row,
+  `spi_sclk_o`/`spi_mosi_o`/`spi_miso_i`/`spi_cs_no` ports, and
+  `pmod_3v3_on_o` tied high to switch on the Pmod 3.3 V load switch (U81),
+  which is off at power-up
+- XDC: PMOD1 in the Digilent Pmod SPI order, CS on U1, MOSI on T1, MISO on
+  P4 with `PULLUP`, SCLK on P5, `PMOD_3V3_ON` on F4, all `LVCMOS33`. The
+  pull-up makes a missing connection read as `0xFF` rather than noise
+- Software: SEGGER project `sw/apps/segger/spi_demo` with a polled driver
+  (`spi_init`, `spi_select`, `spi_deselect`, `spi_xfer`, `spi_xfer_buf`,
+  `spi_wait_idle`). `spi_xfer_buf` keeps at most 16 bytes in flight so RX
+  cannot overrun. The demo sends a 16-byte pattern per mode and rate, and
+  any key re-runs it. `create_project_scu35.tcl` now preloads
+  `spi_demo_segger.coe`
+- Simulation: `fpga/scu35/sim/` split per peripheral (`uart/`, `spi/`,
+  `sum/`); the Verilator runner `run_sim.sh` and `xilinx_sim_models.sv` are
+  removed and xsim is the flow; `create_project_scu35.tcl` points at the
+  moved `.wcfg`. New `tb_spi_periph` checks all four modes against an
+  independent SPI slave model with 15 ns of MISO delay, plus the CLKDIV
+  clamp, loopback, overrun, interrupts and bus errors; passes in xsim.
+  `tb_uart_soc` connects the new ports
+- Post-route: 4089 LUT (25%), 2539 FF (8%), 16 BRAM (33%). Timing at
+  50 MHz: WNS +8.762 ns over 8385 endpoints, no critical warnings
+- `.gitignore`: SEGGER build output under `sw/apps/segger/*/Output/`
+- Lesson: the board silkscreen numbers each Pmod header odd/even across
+  the two rows (1 upper, 2 below it), while the Pmod standard numbers 1 to
+  6 along the upper row. Pmod pins 2 and 3 are silkscreen pins 3 and 5;
+  the first loopback on silkscreen 2 and 3 read `0xFF`. `spi_demo` now
+  names the position by silkscreen number
+- Known: `irq_o` of both UART and SPI is still not routed to the core, so
+  the drivers poll. `uart.c`/`uart.h` now exist three times (GCC
+  `uart_demo`, SEGGER `uart_demo`, SEGGER `spi_demo`)
+
+## hms-v0.5.0 - 2026-09-21 - UART peripheral on the SCU35, table-driven interconnect, verified in xsim and on hardware
 
 - UART running on the SCU35: banner, register readback and echo over the
   FT4232's second serial port (port B) at 115200 8N1, verified with PuTTY.
@@ -52,7 +99,7 @@ point.
   `main.c` has the "Type something" prompt commented out while the SEGGER
   build keeps it, which `tb_uart_soc` depends on
 
-## hms-v0.4.0 - 2026-09-16
+## hms-v0.4.0 - 2026-09-16 - SCU35 running on hardware: XDC, two-flop reset synchroniser, LED demo and heartbeat
 
 - SCU35 build now runs on hardware: bitstream generates cleanly and the LED
   demo plus heartbeat run on the board. Closes the missing-XDC gap noted in
@@ -76,7 +123,7 @@ point.
 - Renamed the Genesys-2 wrapper to `cv32e40x_wrapper.sv` and removed the
   unused SCU35 `led_demo.coe`
 
-## hms-v0.3.2 - 2026-09-13
+## hms-v0.3.2 - 2026-09-13 - SCU35 Vivado project added; synthesises, but no XDC yet
 
 - Added an SCU35 FPGA project at `fpga/scu35/`, targeting the AMD Spartan
   UltraScale+ XCSU35P on the SCU35 evaluation board. Same RTL as the
@@ -92,7 +139,7 @@ point.
   fails on DRC NSTD-1 and UCIO-1. Pin locations, I/O standards, and an
   explicit `create_clock` are still to be written
 
-## hms-v0.3.1 - 2026-09-10
+## hms-v0.3.1 - 2026-09-10 - SEGGER single memory region, clock constraint added, settled at 50 MHz
 
 - Linked the SEGGER build into a single memory region: replaced the stock
   `flash_placement_riscv.xml`, which assumes separate flash and RAM and
@@ -108,7 +155,7 @@ point.
   10.1 ns through the EX-to-ID forwarding network and the DSP48 multiplier.
   Settled at 50 MHz
 
-## hms-v0.3.0 - 2026-09-09
+## hms-v0.3.0 - 2026-09-09 - SEGGER Embedded Studio build of the LED demo
 
 - Added a SEGGER Embedded Studio build of the LED demo at
   `sw/apps/segger/led_demo`, validated on hardware as an alternative to the
@@ -121,7 +168,7 @@ point.
 - Rewrote `sw/tools/elf2coe.py` to read ELF program headers directly,
   dropping the objcopy dependency so any toolchain prefix works on any OS
 
-## hms-v0.2.0 - 2026-08-31
+## hms-v0.2.0 - 2026-08-31 - OBI data interconnect, LED MMIO peripheral, bare-metal firmware stack
 
 - Added `obi_data_interconnect.sv`, owning all address decode and response
   muxing, and separating memory space from peripheral space
@@ -130,7 +177,7 @@ point.
   `sw/tools/elf2coe.py`
 - LED MMIO demo running on the Genesys-2
 
-## hms-v0.1.0 - 2026-08-30
+## hms-v0.1.0 - 2026-08-30 - Genesys-2 project, unified BRAM, heartbeat LED
 
 - Added the Genesys-2 Vivado project creation script
 - Replaced the separate instruction and data memories with a single unified
