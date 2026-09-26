@@ -27,13 +27,20 @@ logic       uart_tx;            // FPGA -> host
 
 always #(CLK_PERIOD_NS/2) clk_p = ~clk_p;
 
+logic spi_mosi;
+
 cv32e40x_wrapper dut (
     .clk_p_i   ( clk_p   ),
     .clk_n_i   ( ~clk_p  ),
     .rst_ni    ( rst_n   ),
     .led_o     ( led     ),
     .uart_rx_i ( uart_rx ),
-    .uart_tx_o ( uart_tx )
+    .uart_tx_o ( uart_tx ),
+    .spi_sclk_o(         ),
+    .spi_mosi_o( spi_mosi ),
+    .spi_miso_i( spi_mosi ),    // PMOD loopback jumper
+    .spi_cs_no (         ),
+    .pmod_3v3_on_o(      )
 );
 
 // ---------------------------------------------------------------------------

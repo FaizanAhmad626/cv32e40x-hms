@@ -27,7 +27,7 @@ module cv32e40x_wrapper import cv32e40x_pkg::*;
 // configuration; all four places must agree:
 //   link.ld        ORIGIN(MEM) = BOOT_ADDR, LENGTH(MEM) = MEM_DEPTH * 4
 //   crt0.S         trap_handler placed at MT_VEC_ADDR, .align 7
-//   main.c         LED_REG address = LED_BASE, UART_BASE likewise
+//   main.c         LED_REG address = LED_BASE, UART_BASE and SPI_BASE likewise
 //   blk_mem_gen_0  Write_Depth_A = MEM_DEPTH
 //
 // RISC-V does not mandate any of these addresses. The privileged spec leaves
@@ -47,7 +47,9 @@ parameter int unsigned  CLIC_ID_WIDTH       = 5,                // Unused: CLIC 
 parameter               LED_BASE            = 32'h1000_0000,    // MMIO peripheral region. Differs from MEM_BASE in the top hex digit, so the decode is a comparison on addr[31:28] rather than a wide comparator. Peripherals added later (timer, UART, audio FIFO, accelerator) get 64 KB slots from 0x1001_0000 upward.
 parameter               UART_BASE           = 32'h1001_0000,    // UART slot, the first 64 KB slot after LED. Registers at +0x00 DATA, +0x04 STATUS, +0x08 BAUDDIV, +0x0C IRQ_EN (see uart_peripheral.sv).
 parameter int unsigned  UART_BAUD           = 115_200,          // Reset baud rate. Software can change it through BAUDDIV.
-parameter int unsigned  SYS_CLK_HZ          = 50_000_000,       // Frequency of clk_50M_s. Must track CLKOUT1_REQUESTED_OUT_FREQ in create_project_scu35.tcl, because the UART reset divisor is derived from it.
+parameter               SPI_BASE            = 32'h1002_0000,    // SPI master slot, the next 64 KB slot after UART. Registers at +0x00 DATA, +0x04 STATUS, +0x08 CTRL, +0x0C CLKDIV, +0x10 CS, +0x14 IRQ_EN (see spi_peripheral.sv).
+parameter int unsigned  SPI_SCLK_HZ         = 1_000_000,        // Reset SCLK rate. Software can change it through CLKDIV; the ceiling is SYS_CLK_HZ / 8 (6.25 MHz at 50 MHz).
+parameter int unsigned  SYS_CLK_HZ          = 50_000_000,       // Frequency of clk_50M_s. Must track CLKOUT1_REQUESTED_OUT_FREQ in create_project_scu35.tcl, because the UART and SPI reset divisors are derived from it.
 parameter               MEM_BASE            = 32'h8000_0000,    // Base of the unified instruction+data memory, decoded by obi_data_interconnect. Same value as BOOT_ADDR because boot is at the first word of memory, but kept as a separate parameter: if boot ever moves to an offset within memory, the region base must not follow it.
 parameter int unsigned  MEM_DEPTH           = 16384             // 16384 x 32-bit words = 64 KB, holding .text, .rodata, .data, .bss and the stack. Sets the decode width: ADDR_WIDTH = 14, so the region tag is addr[31:16].
 )
@@ -59,7 +61,14 @@ parameter int unsigned  MEM_DEPTH           = 16384             // 16384 x 32-bi
     output  logic   [4:0]   led_o,      // LED signals
 
     input   logic           uart_rx_i,  // from FT4232 port B (SCU35_UARTB_RXD)
-    output  logic           uart_tx_o   // to FT4232 port B   (SCU35_UARTB_TXD)
+    output  logic           uart_tx_o,  // to FT4232 port B   (SCU35_UARTB_TXD)
+
+    output  logic           spi_sclk_o, // SPI master on PMOD1, Digilent Pmod Type 2A pin order:
+    output  logic           spi_mosi_o, //   pin 1 CS, pin 2 MOSI, pin 3 MISO, pin 4 SCLK
+    input   logic           spi_miso_i,
+    output  logic           spi_cs_no,
+
+    output  logic           pmod_3v3_on_o   // enables the Pmod 3.3 V load switch (U81)
     );  
 
 
@@ -247,18 +256,19 @@ logic        core_sleep_s;      // Core is sleeping
 // One row per interconnect slave. Index order is also the priority order
 // if two rows ever overlap (they must not).
 // ---------------------------------------------------------------------------
-localparam int unsigned NUM_SLAVES = 3;
+localparam int unsigned NUM_SLAVES = 4;
 localparam int unsigned SLV_MEM    = 0;
 localparam int unsigned SLV_LED    = 1;
 localparam int unsigned SLV_UART   = 2;
+localparam int unsigned SLV_SPI    = 3;
 
 // Every region here is 64 KB, hence the shared mask. MEM's mask follows from
 // MEM_DEPTH (16384 words = 2^16 bytes); if the depth changes, so must this.
 localparam logic [31:0] SLOT_MASK  = 32'hFFFF_0000;
 
 // Packed arrays list the highest index first.
-localparam logic [NUM_SLAVES-1:0][31:0] SLV_BASE = { UART_BASE, LED_BASE, MEM_BASE };
-localparam logic [NUM_SLAVES-1:0][31:0] SLV_MASK = { SLOT_MASK, SLOT_MASK, SLOT_MASK };
+localparam logic [NUM_SLAVES-1:0][31:0] SLV_BASE = { SPI_BASE,  UART_BASE, LED_BASE,  MEM_BASE  };
+localparam logic [NUM_SLAVES-1:0][31:0] SLV_MASK = { SLOT_MASK, SLOT_MASK, SLOT_MASK, SLOT_MASK };
 
 // ---------------------------------------------------------------------------
 // Interconnect to slaves
@@ -283,6 +293,7 @@ logic [ 5:0] slv_atop_s;
 
 logic [ 3:0] led_pins_s;
 logic        uart_irq_s;        // not yet routed to irq_s
+logic        spi_irq_s;         // not yet routed to irq_s
 
 // ---------------------------------------------------------------------------
 // LED Signals
@@ -314,11 +325,13 @@ assign debug_req_s          =  1'b0;                    // disable debug mode
 assign fencei_flush_ack_s   =  fencei_flush_req_s;      // to avoid stalling fence.i instructions indefinitely
 assign fetch_enable_s       =  1'b1;                    // enable instruction fetch
 assign led_o = { heartbeat_q[25], led_pins_s[3:0] };    // LED signals
+assign pmod_3v3_on_o        =  1'b1;                    // power the Pmod headers; the switch is off until the FPGA drives this
 
 // Only the memory could ever support exclusive access (A_EXT = A_NONE, so
 // none of them do today). Peripherals never report EXOKAY.
 assign slv_exokay_s[SLV_LED]  = 1'b0;
 assign slv_exokay_s[SLV_UART] = 1'b0;
+assign slv_exokay_s[SLV_SPI]  = 1'b0;
 
 always_ff @(posedge clk_50M_s or negedge rst_ns) begin
   if (!rst_ns) heartbeat_q <= '0;
@@ -578,6 +591,32 @@ uart_peripheral_inst
     .uart_rx_i  (   uart_rx_i               ),
     .uart_tx_o  (   uart_tx_o               ),
     .irq_o      (   uart_irq_s              )
+);
+
+spi_peripheral
+#(
+    .CLK_HZ     (   SYS_CLK_HZ  ),
+    .SCLK_HZ    (   SPI_SCLK_HZ ),
+    .FIFO_DEPTH (   16          )
+)
+spi_peripheral_inst
+(
+    .clk_i      (   clk_50M_s               ),
+    .rst_ni     (   rst_ns                  ),
+    .req_i      (   slv_req_s   [SLV_SPI]   ),
+    .gnt_o      (   slv_gnt_s   [SLV_SPI]   ),
+    .rvalid_o   (   slv_rvalid_s[SLV_SPI]   ),
+    .addr_i     (   slv_addr_s              ),
+    .be_i       (   slv_be_s                ),
+    .we_i       (   slv_we_s                ),
+    .wdata_i    (   slv_wdata_s             ),
+    .rdata_o    (   slv_rdata_s [SLV_SPI]   ),
+    .err_o      (   slv_err_s   [SLV_SPI]   ),
+    .spi_sclk_o (   spi_sclk_o              ),
+    .spi_mosi_o (   spi_mosi_o              ),
+    .spi_miso_i (   spi_miso_i              ),
+    .spi_cs_no  (   spi_cs_no               ),
+    .irq_o      (   spi_irq_s               )
 );
 
 endmodule

@@ -19,4 +19,5 @@ min_area_pfile.tmp
 
 # SEGGER Embedded Studio build artifacts
 sw/apps/*/Output/
+sw/apps/segger/*/Output/
 *.emSession

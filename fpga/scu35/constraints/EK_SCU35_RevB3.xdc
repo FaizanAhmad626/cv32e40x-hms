@@ -409,8 +409,8 @@ set_property IOSTANDARD  LVCMOS33 [get_ports "led_o[1]"] ;# Bank  45 VCCO - VR_V
 # set_property IOSTANDARD  LVCMOSxx [get_ports "CLICK2_AN"] ;# Bank  66 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L29N_66
 # set_property PACKAGE_PIN A9       [get_ports "FAN_EN"] ;# Bank  66 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L22N_HDGC_66
 # set_property IOSTANDARD  LVCMOSxx [get_ports "FAN_EN"] ;# Bank  66 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L22N_HDGC_66
-# set_property PACKAGE_PIN F4       [get_ports "PMOD_3V3_ON"] ;# Bank  66 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L36P_AD7P_66
-# set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD_3V3_ON"] ;# Bank  66 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L36P_AD7P_66
+set_property PACKAGE_PIN F4       [get_ports "pmod_3v3_on_o"] ;# Bank  66 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L36P_AD7P_66
+set_property IOSTANDARD  LVCMOS33 [get_ports "pmod_3v3_on_o"] ;# Bank  66 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L36P_AD7P_66
 # set_property PACKAGE_PIN H4       [get_ports "CLICK1_AN"] ;# Bank  66 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L29P_66
 # set_property IOSTANDARD  LVCMOSxx [get_ports "CLICK1_AN"] ;# Bank  66 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L29P_66
 # set_property PACKAGE_PIN A10      [get_ports "SHIELD_DIO_0"] ;# Bank  66 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L22P_HDGC_66
@@ -523,26 +523,27 @@ set_property IOSTANDARD  LVCMOS33 [get_ports "rst_ni"] ;# Bank  66 VCCO - VR_VCC
 # set_property IOSTANDARD  LVCMOSxx [get_ports "SYSMON_SDA"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L34P_I2C_SDA_65
 # set_property PACKAGE_PIN Y1       [get_ports "PMOD2_P5"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L27P_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD2_P5"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L27P_65
-# set_property PACKAGE_PIN P4       [get_ports "PMOD1_P3"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L40N_65
-# set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD1_P3"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L40N_65
+set_property PACKAGE_PIN P4       [get_ports "spi_miso_i"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L40N_65
+set_property IOSTANDARD  LVCMOS33 [get_ports "spi_miso_i"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L40N_65
+set_property PULLUP true [get_ports spi_miso_i] ;# with no slave and no jumper MISO reads 1, so every byte comes back 0xFF: an obvious signature instead of random data
 # set_property PACKAGE_PIN T4       [get_ports "PMOD3_P8"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L33N_CSI_B_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD3_P8"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L33N_CSI_B_65
 # set_property PACKAGE_PIN V2       [get_ports "PMOD2_P2"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L26N_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD2_P2"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L26N_65
-# set_property PACKAGE_PIN P5       [get_ports "PMOD1_P4"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L40P_65
-# set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD1_P4"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L40P_65
+set_property PACKAGE_PIN P5       [get_ports "spi_sclk_o"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L40P_65
+set_property IOSTANDARD  LVCMOS33 [get_ports "spi_sclk_o"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L40P_65
 # set_property PACKAGE_PIN R4       [get_ports "PMOD0_P1"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L33P_FCS1_B_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD0_P1"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L33P_FCS1_B_65
 # set_property PACKAGE_PIN U2       [get_ports "PMOD2_P3"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L26P_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD2_P3"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L26P_65
-# set_property PACKAGE_PIN U1       [get_ports "PMOD1_P1"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L39N_65
-# set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD1_P1"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L39N_65
+set_property PACKAGE_PIN U1       [get_ports "spi_cs_no"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L39N_65
+set_property IOSTANDARD  LVCMOS33 [get_ports "spi_cs_no"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L39N_65
 # set_property PACKAGE_PIN AB1      [get_ports "PMOD3_P6"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L32N_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD3_P6"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L32N_65
 # set_property PACKAGE_PIN AB3      [get_ports "CLICK2_SCL"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L25N_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "CLICK2_SCL"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L25N_65
-# set_property PACKAGE_PIN T1       [get_ports "PMOD1_P2"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L39P_D04_OSPID00_65
-# set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD1_P2"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L39P_D04_OSPID00_65
+set_property PACKAGE_PIN T1       [get_ports "spi_mosi_o"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L39P_D04_OSPID00_65
+set_property IOSTANDARD  LVCMOS33 [get_ports "spi_mosi_o"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L39P_D04_OSPID00_65
 # set_property PACKAGE_PIN AB2      [get_ports "PMOD3_P7"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L32P_BUSY_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD3_P7"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L32P_BUSY_65
 # set_property PACKAGE_PIN AA3      [get_ports "PMOD2_P1"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L25P_65

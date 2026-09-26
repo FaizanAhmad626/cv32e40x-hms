@@ -30,9 +30,9 @@ set fpga_root    "$repo_root/fpga/scu35"
 set fpga_rtl_dir "$fpga_root/rtl"
 set fpga_xdc_dir "$fpga_root/constraints"
 # Program preloaded into the BRAM. Swap the file name to run another app.
-set coe_file     "$fpga_root/mem_init_file/uart_demo_segger.coe"
+set coe_file     "$fpga_root/mem_init_file/spi_demo_segger.coe"
 set proj_dir     "$fpga_root/vivado_proj"
-set wcfg_file    "$fpga_root/waveform_file/cv32e40x_wrapper_behav.wcfg"
+set wcfg_file    "$fpga_root/sim/sum/waveform_file/cv32e40x_wrapper_behav.wcfg"
 
 puts "INFO: repo_root = $repo_root"
 
