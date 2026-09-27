@@ -6,6 +6,97 @@ Versions are tagged `hms-v*` to keep them distinct from the upstream core
 tags (`0.1.0` through `0.10.0`), which belong to OpenHW and stop at the fork
 point.
 
+## hms-v0.7.0 - 2026-09-27 - I2C master on the SCU35, verified in simulation and on the on-board accelerometer, final pins on PMOD2
+
+- I2C running on the SCU35: `i2c_demo` passes every test at 100 kHz and at
+  378 kHz against the on-board LIS2DE12 accelerometer (board bus I2C3, 0x18).
+  It scans the bus, reads WHO_AM_I = 0x33, writes and reads back four patterns
+  in INT1_THS plus a two-byte auto-increment burst (restoring the originals),
+  and measures gravity at about 1 g. Results go over FT4232 port B at 115200
+  8N1 and on the LEDs (0x0F), followed by live X/Y/Z readings in mg. On
+  PMOD2 the same demo runs the accelerometer tests only if a LIS2DE12
+  answers at 0x18 or 0x19; with any other module (or none) it checks the
+  idle bus levels, lists every address that answers, and reports
+  `bus OK, N device(s) answered` with LED0 lit
+- Added `i2c_master`: single-master byte engine, 7-bit addressing in
+  software, repeated START, clock stretching. Every bit is four quarters of
+  CLKDIV cycles (q0 set SDA, q1 release SCL, q2 SCL high, q3 pull SCL low),
+  so SCL = fclk / (4 * CLKDIV) and SDA always moves a full quarter away from
+  an SCL edge. The quarter counter freezes in q1 until the synchronised SCL
+  reads high, which is the whole of clock-stretching support. SCL is held
+  low between commands while the bus is owned, so software speed never
+  matters. CLKDIV below 4 acts as 4. `ABORT` releases both lines at once.
+  Pad enables come from flops, SCL/SDA pass two-flop synchronisers
+- Added `i2c_peripheral` at `0x1003_0000` in slot 4: `DATA`, `CMD`,
+  `STATUS`, `CLKDIV` and `IRQ_EN` at `+0x00` to `+0x10`. One command is an
+  optional START, an optional byte (WRITE or READ, with NACK for the last
+  read byte) and an optional STOP. `STATUS` reports BUSY, RX_NACK, HELD and
+  the live SCL/SDA levels, so a missing pull-up shows up as a 0 on an idle
+  bus. `CLKDIV` resets to 125 (100 kHz); 33 gives 378 kHz with tLOW 1.32 us.
+  Byte at a time and polled, no FIFOs. Any other offset returns a bus error
+- Wrapper: new `I2C_BASE` and `I2C_SCL_HZ` parameters, `SLV_I2C` table row,
+  `i2c_scl_io`/`i2c_sda_io` inout ports driven as `oe ? 1'b0 : 1'bz` (Vivado
+  infers IOBUFs, an ASIC flow maps them to open-drain pads). The engine
+  itself has no inout ports or vendor primitives
+- XDC, final: SCL on PMOD2 pin 3 (U2) and SDA on PMOD2 pin 4 (AA1), the
+  Digilent Pmod I2C (Type 6) order, so a standard I2C Pmod module plugs
+  straight in; pin 5 is GND and pin 6 is the switched Pmod 3.3 V rail.
+  PMOD2 is header J10 on the board. On
+  the board silkscreen (odd numbers on the upper row) these are pins 5, 7, 9
+  and 11. `LVCMOS33` with the weak internal `PULLUP`, which is too weak for
+  I2C on its own: the module or the wiring must add real pull-ups (e.g.
+  4.7 kOhm to 3.3 V). The on-board I2C0 and I2C3 lines are commented out
+  again. `create_project_scu35.tcl` now preloads `i2c_demo_segger.coe`
+- Pin history: the controller was verified on the on-board buses first
+  (I2C0 at L1/K1, then I2C3 at J2/H2, see below), then moved to PMOD2 so the
+  bus is free for external modules. Only the XDC and comments changed; the
+  RTL, the address map and the driver are the same
+- Software: SEGGER project `sw/apps/segger/i2c_demo` with a polled driver
+  (`i2c_init`, `i2c_bus_idle_ok`, `i2c_probe`, `i2c_write`, `i2c_read`,
+  `i2c_write_read`, `i2c_reg_write`, `i2c_reg_read`) built from two helpers
+  that each issue one command and poll BUSY. On a NACK the driver sends STOP,
+  on a timeout ABORT, so the bus is always left free. Timing uses `mcycle`,
+  after clearing `mcountinhibit`
+- Simulation: new `fpga/scu35/sim/i2c/` with `tb_i2c_periph` and two
+  behavioural slave models written from their datasheets, `m24c64_model`
+  (EEPROM with page wrap, write cycle and a WC write-protect input) and
+  `lis2de12_model` (register file with auto-increment and X/Y/Z inputs).
+  The test runs both on one open-drain bus with pull-ups and checks probes,
+  page writes, random and sequential reads, write protection, register
+  write/readback, burst reads, clock stretching, ABORT, IRQ, bus errors and
+  the CLKDIV clamp, while a bus monitor checks SCL timing and that SDA never
+  moves while SCL is high except for START and STOP. Four deliberately broken
+  RTL variants all fail it. A whole-SoC run with the real core executing
+  the demo passes at both speeds, and with an empty bus (pull-ups only, as
+  on a bare PMOD2) it reports bus OK and no devices. `tb_uart_soc` connects
+  the new ports
+- Post-route (I2C3 build): 4218 LUT (26%), 2635 FF (8%), 16 BRAM (33%),
+  3 DSP. Timing at 50 MHz: WNS +8.587 ns over 8627 endpoints, no critical
+  warnings. The PMOD2 build moves two pins and should differ only in
+  placement noise
+- First hardware target was the board's I2C0 EEPROM (M24C64, 0x50/0x58).
+  Reads were exact at both speeds: bytes 0 to 7 are an FRU board-ID header
+  whose checksum sums to 0x00. Writes were refused: the EEPROM ACKed its
+  address and memory address, then NACKed every data byte, which is the
+  datasheet behaviour with WC held high. AMD ties WC high to protect the
+  board ID and it has no FPGA pin, so the controller moved to I2C3
+- Lesson: after rebuilding firmware under the same COE name, Vivado does
+  not re-synthesize the BRAM IP, because it tracks the COE by file name. The
+  first run after the move had the new pins (the scan found 0x18) but still
+  ran the old EEPROM firmware. Regenerate the `blk_mem_gen_0` output products,
+  or rerun `create_project_scu35.tcl`, after every firmware change
+- PMOD2 checked on hardware with no module fitted: with pin 3 (silkscreen
+  5) jumpered to GND, `i2c_demo` reports `SCL=0 SDA=1` in its bus check,
+  which confirms the header and the pin mapping; with the jumper removed the
+  bus idles high on the internal pull-ups, the scan finds nothing, and the
+  result is `bus OK, 0 device(s) answered` (LED0) at both speeds. A full
+  transfer on PMOD2 still needs an I2C module with pull-ups
+- Lesson: the board's Pmod header numbering does not follow UG1713, which
+  lists J10 to J13 as PMOD0 to PMOD3. PMOD2 is J10 and PMOD1 is J13 (found
+  during SPI bring-up). Identify a header with a jumper test, not the guide
+- Known: `irq_o` of UART, SPI and I2C is still not routed to the core, so
+  the drivers poll. `uart.c`/`uart.h` now exist four times
+
 ## hms-v0.6.0 - 2026-09-26 - SPI master on the SCU35, verified in xsim and over a PMOD loopback on hardware
 
 - SPI running on the SCU35: with a jumper from MOSI to MISO on PMOD1 (J13,
