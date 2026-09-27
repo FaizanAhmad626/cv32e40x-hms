@@ -515,8 +515,9 @@ set_property IOSTANDARD  LVCMOS33 [get_ports "rst_ni"] ;# Bank  66 VCCO - VR_VCC
 # set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD1_P5"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L41N_OSPI_ECC_FAIL_65
 # set_property PACKAGE_PIN W1       [get_ports "SYSMON_SCL"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L34N_I2C_SCLK_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "SYSMON_SCL"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L34N_I2C_SCLK_65
-# set_property PACKAGE_PIN AA1      [get_ports "PMOD2_P4"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L27N_65
-# set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD2_P4"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L27N_65
+set_property PACKAGE_PIN AA1      [get_ports "i2c_sda_io"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L27N_65 (PMOD2_P4, header J10: Pmod pin 4 = SDA in the Digilent Pmod I2C (Type 6) order)
+set_property IOSTANDARD  LVCMOS33 [get_ports "i2c_sda_io"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L27N_65
+set_property PULLUP true [get_ports i2c_sda_io] ;# weak internal pull-up only: too weak for I2C on its own, so the module or the wiring must add real pull-ups (e.g. 4.7 kOhm to 3.3 V)
 # set_property PACKAGE_PIN P3       [get_ports "PMOD1_P6"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L41P_OSPI_RST_B_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD1_P6"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L41P_OSPI_RST_B_65
 # set_property PACKAGE_PIN V1       [get_ports "SYSMON_SDA"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L34P_I2C_SDA_65
@@ -534,8 +535,9 @@ set_property PACKAGE_PIN P5       [get_ports "spi_sclk_o"] ;# Bank  65 VCCO - VR
 set_property IOSTANDARD  LVCMOS33 [get_ports "spi_sclk_o"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L40P_65
 # set_property PACKAGE_PIN R4       [get_ports "PMOD0_P1"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L33P_FCS1_B_65
 # set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD0_P1"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L33P_FCS1_B_65
-# set_property PACKAGE_PIN U2       [get_ports "PMOD2_P3"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L26P_65
-# set_property IOSTANDARD  LVCMOSxx [get_ports "PMOD2_P3"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L26P_65
+set_property PACKAGE_PIN U2       [get_ports "i2c_scl_io"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L26P_65 (PMOD2_P3, header J10: Pmod pin 3 = SCL in the Digilent Pmod I2C (Type 6) order)
+set_property IOSTANDARD  LVCMOS33 [get_ports "i2c_scl_io"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L26P_65
+set_property PULLUP true [get_ports i2c_scl_io] ;# weak internal pull-up only: too weak for I2C on its own, so the module or the wiring must add real pull-ups (e.g. 4.7 kOhm to 3.3 V)
 set_property PACKAGE_PIN U1       [get_ports "spi_cs_no"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L39N_65
 set_property IOSTANDARD  LVCMOS33 [get_ports "spi_cs_no"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L39N_65
 # set_property PACKAGE_PIN AB1      [get_ports "PMOD3_P6"] ;# Bank  65 VCCO - VR_VCCO_65_66_67_68_3V3 - IO_L32N_65

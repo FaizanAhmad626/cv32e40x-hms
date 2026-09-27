@@ -27,7 +27,7 @@ module cv32e40x_wrapper import cv32e40x_pkg::*;
 // configuration; all four places must agree:
 //   link.ld        ORIGIN(MEM) = BOOT_ADDR, LENGTH(MEM) = MEM_DEPTH * 4
 //   crt0.S         trap_handler placed at MT_VEC_ADDR, .align 7
-//   main.c         LED_REG address = LED_BASE, UART_BASE and SPI_BASE likewise
+//   main.c         LED_REG address = LED_BASE, UART_BASE, SPI_BASE and I2C_BASE likewise
 //   blk_mem_gen_0  Write_Depth_A = MEM_DEPTH
 //
 // RISC-V does not mandate any of these addresses. The privileged spec leaves
@@ -49,7 +49,9 @@ parameter               UART_BASE           = 32'h1001_0000,    // UART slot, th
 parameter int unsigned  UART_BAUD           = 115_200,          // Reset baud rate. Software can change it through BAUDDIV.
 parameter               SPI_BASE            = 32'h1002_0000,    // SPI master slot, the next 64 KB slot after UART. Registers at +0x00 DATA, +0x04 STATUS, +0x08 CTRL, +0x0C CLKDIV, +0x10 CS, +0x14 IRQ_EN (see spi_peripheral.sv).
 parameter int unsigned  SPI_SCLK_HZ         = 1_000_000,        // Reset SCLK rate. Software can change it through CLKDIV; the ceiling is SYS_CLK_HZ / 8 (6.25 MHz at 50 MHz).
-parameter int unsigned  SYS_CLK_HZ          = 50_000_000,       // Frequency of clk_50M_s. Must track CLKOUT1_REQUESTED_OUT_FREQ in create_project_scu35.tcl, because the UART and SPI reset divisors are derived from it.
+parameter               I2C_BASE            = 32'h1003_0000,    // I2C master slot, the next 64 KB slot after SPI. Registers at +0x00 DATA, +0x04 CMD, +0x08 STATUS, +0x0C CLKDIV, +0x10 IRQ_EN (see i2c_peripheral.sv).
+parameter int unsigned  I2C_SCL_HZ          = 100_000,          // Reset SCL rate (Standard mode). Software can change it through CLKDIV; SCL = SYS_CLK_HZ / (4 * CLKDIV), CLKDIV 33 for Fast mode.
+parameter int unsigned  SYS_CLK_HZ          = 50_000_000,       // Frequency of clk_50M_s. Must track CLKOUT1_REQUESTED_OUT_FREQ in create_project_scu35.tcl, because the UART, SPI and I2C reset divisors are derived from it.
 parameter               MEM_BASE            = 32'h8000_0000,    // Base of the unified instruction+data memory, decoded by obi_data_interconnect. Same value as BOOT_ADDR because boot is at the first word of memory, but kept as a separate parameter: if boot ever moves to an offset within memory, the region base must not follow it.
 parameter int unsigned  MEM_DEPTH           = 16384             // 16384 x 32-bit words = 64 KB, holding .text, .rodata, .data, .bss and the stack. Sets the decode width: ADDR_WIDTH = 14, so the region tag is addr[31:16].
 )
@@ -67,6 +69,9 @@ parameter int unsigned  MEM_DEPTH           = 16384             // 16384 x 32-bi
     output  logic           spi_mosi_o, //   pin 1 CS, pin 2 MOSI, pin 3 MISO, pin 4 SCLK
     input   logic           spi_miso_i,
     output  logic           spi_cs_no,
+
+    inout   wire            i2c_scl_io, // I2C master on PMOD2 (J10), Pmod I2C order: pin 3 SCL (U2), pin 4 SDA (AA1).
+    inout   wire            i2c_sda_io, //   Open drain: only driven low or left floating; needs pull-ups on the module.
 
     output  logic           pmod_3v3_on_o   // enables the Pmod 3.3 V load switch (U81)
     );  
@@ -256,19 +261,20 @@ logic        core_sleep_s;      // Core is sleeping
 // One row per interconnect slave. Index order is also the priority order
 // if two rows ever overlap (they must not).
 // ---------------------------------------------------------------------------
-localparam int unsigned NUM_SLAVES = 4;
+localparam int unsigned NUM_SLAVES = 5;
 localparam int unsigned SLV_MEM    = 0;
 localparam int unsigned SLV_LED    = 1;
 localparam int unsigned SLV_UART   = 2;
 localparam int unsigned SLV_SPI    = 3;
+localparam int unsigned SLV_I2C    = 4;
 
 // Every region here is 64 KB, hence the shared mask. MEM's mask follows from
 // MEM_DEPTH (16384 words = 2^16 bytes); if the depth changes, so must this.
 localparam logic [31:0] SLOT_MASK  = 32'hFFFF_0000;
 
 // Packed arrays list the highest index first.
-localparam logic [NUM_SLAVES-1:0][31:0] SLV_BASE = { SPI_BASE,  UART_BASE, LED_BASE,  MEM_BASE  };
-localparam logic [NUM_SLAVES-1:0][31:0] SLV_MASK = { SLOT_MASK, SLOT_MASK, SLOT_MASK, SLOT_MASK };
+localparam logic [NUM_SLAVES-1:0][31:0] SLV_BASE = { I2C_BASE,  SPI_BASE,  UART_BASE, LED_BASE,  MEM_BASE  };
+localparam logic [NUM_SLAVES-1:0][31:0] SLV_MASK = { SLOT_MASK, SLOT_MASK, SLOT_MASK, SLOT_MASK, SLOT_MASK };
 
 // ---------------------------------------------------------------------------
 // Interconnect to slaves
@@ -294,6 +300,9 @@ logic [ 5:0] slv_atop_s;
 logic [ 3:0] led_pins_s;
 logic        uart_irq_s;        // not yet routed to irq_s
 logic        spi_irq_s;         // not yet routed to irq_s
+logic        i2c_irq_s;         // not yet routed to irq_s
+logic        i2c_scl_oe_s;      // 1 = pull SCL low
+logic        i2c_sda_oe_s;      // 1 = pull SDA low
 
 // ---------------------------------------------------------------------------
 // LED Signals
@@ -332,6 +341,13 @@ assign pmod_3v3_on_o        =  1'b1;                    // power the Pmod header
 assign slv_exokay_s[SLV_LED]  = 1'b0;
 assign slv_exokay_s[SLV_UART] = 1'b0;
 assign slv_exokay_s[SLV_SPI]  = 1'b0;
+assign slv_exokay_s[SLV_I2C]  = 1'b0;
+
+// Open-drain I2C pads. Driving 0 or Z is the whole of open drain; Vivado
+// infers an IOBUF from this, and an ASIC flow maps it to an open-drain pad.
+// The pads read back the real line level, including a slave pulling low.
+assign i2c_scl_io = i2c_scl_oe_s ? 1'b0 : 1'bz;
+assign i2c_sda_io = i2c_sda_oe_s ? 1'b0 : 1'bz;
 
 always_ff @(posedge clk_50M_s or negedge rst_ns) begin
   if (!rst_ns) heartbeat_q <= '0;
@@ -617,6 +633,31 @@ spi_peripheral_inst
     .spi_miso_i (   spi_miso_i              ),
     .spi_cs_no  (   spi_cs_no               ),
     .irq_o      (   spi_irq_s               )
+);
+
+i2c_peripheral
+#(
+    .CLK_HZ     (   SYS_CLK_HZ  ),
+    .SCL_HZ     (   I2C_SCL_HZ  )
+)
+i2c_peripheral_inst
+(
+    .clk_i      (   clk_50M_s               ),
+    .rst_ni     (   rst_ns                  ),
+    .req_i      (   slv_req_s   [SLV_I2C]   ),
+    .gnt_o      (   slv_gnt_s   [SLV_I2C]   ),
+    .rvalid_o   (   slv_rvalid_s[SLV_I2C]   ),
+    .addr_i     (   slv_addr_s              ),
+    .be_i       (   slv_be_s                ),
+    .we_i       (   slv_we_s                ),
+    .wdata_i    (   slv_wdata_s             ),
+    .rdata_o    (   slv_rdata_s [SLV_I2C]   ),
+    .err_o      (   slv_err_s   [SLV_I2C]   ),
+    .scl_i      (   i2c_scl_io              ),
+    .scl_oe_o   (   i2c_scl_oe_s            ),
+    .sda_i      (   i2c_sda_io              ),
+    .sda_oe_o   (   i2c_sda_oe_s            ),
+    .irq_o      (   i2c_irq_s               )
 );
 
 endmodule

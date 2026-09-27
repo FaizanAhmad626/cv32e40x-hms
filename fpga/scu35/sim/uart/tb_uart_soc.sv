@@ -28,6 +28,9 @@ logic       uart_tx;            // FPGA -> host
 always #(CLK_PERIOD_NS/2) clk_p = ~clk_p;
 
 logic spi_mosi;
+wire  i2c_scl, i2c_sda;          // open-drain I2C0 bus, nothing on it but the pull-ups
+pullup (i2c_scl);
+pullup (i2c_sda);
 
 cv32e40x_wrapper dut (
     .clk_p_i   ( clk_p   ),
@@ -40,6 +43,8 @@ cv32e40x_wrapper dut (
     .spi_mosi_o( spi_mosi ),
     .spi_miso_i( spi_mosi ),    // PMOD loopback jumper
     .spi_cs_no (         ),
+    .i2c_scl_io( i2c_scl ),
+    .i2c_sda_io( i2c_sda ),
     .pmod_3v3_on_o(      )
 );
 

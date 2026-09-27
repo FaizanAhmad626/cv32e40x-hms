@@ -15,6 +15,8 @@
 //   0  MEM   0x8000_0000 / 0xFFFF_0000   memory_controller port B (64 KB)
 //   1  LED   0x1000_0000 / 0xFFFF_0000   led_peripheral
 //   2  UART  0x1001_0000 / 0xFFFF_0000   uart_peripheral
+//   3  SPI   0x1002_0000 / 0xFFFF_0000   spi_peripheral
+//   4  I2C   0x1003_0000 / 0xFFFF_0000   i2c_peripheral
 //
 // Every peripheral gets a 64 KB slot. The slave sees the full address and
 // decodes its own register offset from the low bits; that is register
