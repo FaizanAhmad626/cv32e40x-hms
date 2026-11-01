@@ -6,6 +6,76 @@ Versions are tagged `hms-v*` to keep them distinct from the upstream core
 tags (`0.1.0` through `0.10.0`), which belong to OpenHW and stop at the fork
 point.
 
+## hms-v0.8.0 - 2026-11-01 - TDM microphone capture on the SCU35, FPGA as bus master, 1 kHz tone verified on all 8 mics
+
+- Standalone mic test in `mic_test/`, separate from the SoC: the
+  SCU35 drives the sensiBel SB-POLARIS P002 kit (8 SBM100B-TDM mics) as TDM
+  master and records the samples with an ILA. Not yet connected to the
+  CV32E40X; the receiver is written to become an OBI peripheral later
+- Wiring: the POLARIS top board is detached from its TDM-to-USB board and
+  driven through its 20-pin J2 connector, which sensiBel
+  confirmed is a 3.3 V plug-and-play interface with no enable or direction
+  pins; the board makes its own 1.8 V and level-shifts the mic side. J2 to
+  PMOD0, by board silkscreen: BCLK (row 1 right) to 1, WS (row 3 right) to
+  3, DATA (row 4 right) to 5, GND (rows 6 and 7 right) to 9 and 10, 3.3 V
+  (rows 1 and 2 left) to 11 and 12. FPGA pins R4, R3 and W3, `LVCMOS33`.
+  The PMOD 3.3 V rail is behind a load switch, enabled by F4
+- Added `tdm_master_rx`: TDM8 master and receiver. BCLK = clk / CLK_DIV
+  (100 MHz / 16 = 6.25 MHz, mic Normal mode), WS high for one BCLK at bit 0
+  of every 256-BCLK frame, so 24.414 kHz per mic. DATA passes a two-flop
+  synchroniser, is read CAPTURE_PHASE cycles after the BCLK falling edge
+  (3, so 30 ns, with the synchroniser delay counted in) and shifted MSB first
+  into a 24-bit register. After bit 23 of a slot it outputs the signed
+  sample, the slot number and a one-cycle `sample_valid`; bits 24 to 31
+  (High-Z) are ignored. `slot_mask_i` selects slots, `en_i` stops BCLK and
+  WS low
+- Added `mic_tdm_top`: IBUFDS on the 100 MHz board clock, a 256-cycle
+  power-on reset, then the PMOD 3.3 V switch is turned on and BCLK starts
+  50 ms later, so the mics are powered before they are clocked (green D2,
+  then orange D1 on the POLARIS board). `tdm_ila` (8192 deep, capture
+  control on, 2 comparators) records sample, slot, sample_valid,
+  frame_start, BCLK, WS and DATA
+- Constraints: `constraints/EK_SCU35_RevB3.XDC`, the board XDC with the
+  clock, F4, R4, R3 and W3 lines active
+- `scripts/create_project_mic_test.tcl` builds the Vivado project from
+  scratch in `mic_test/vivado` (git-ignored): adds the RTL, sim and
+  constraint files, generates `tdm_ila` from its settings, sets the tops and
+  an unlimited xsim run time. It warns when the implementation temp path
+  passes 146 characters
+- Simulation: `sim/tb_tdm_master_rx` with `sim/sbm100b_tdm_model`, a
+  behavioural SBM100B-TDM written from the datasheet (rev 0.71), eight of
+  them on one shared DATA line with 2 ns wire delay each way and 15 ns
+  clock-to-out. Slots send {slot ID, frame number}, slot 3 a 1 kHz sine.
+  Checks BCLK period and duty, WS spacing, width and edge, slot IDs, frame
+  numbers, masking and disable. Vivado xsim: TEST PASSED, 73 frames, 520
+  samples, 0 errors
+- Hardware, ILA with capture control off: BCLK period 16 clocks, WS one
+  BCLK wide, and the decoded samples match the DATA bits bit for bit. With
+  capture control on (store when `sample_valid` = 1), a capture holds 1024
+  samples per slot. A 1 kHz phone tone (`data/iladata.csv`) peaks at
+  1001.4 Hz on every slot, 76.7 to 82.4 dB above the noise floor, at -65.6
+  to -60.6 dBFS
+- `scripts/plot_ila_tdm.m`: reads an ILA CSV export or an .ila file,
+  converts the hex samples to signed 24-bit, splits them by slot, removes
+  DC, and plots each slot's waveform and spectrum (saved as `data/time.png`
+  and `data/spectrum.png`) with the level, peak frequency and noise margin
+  per slot
+- Post-route: 1670 LUT (10%), 2781 FF (9%), 7.5 BRAM (16%), 0 DSP, most of
+  it the ILA. Timing at 100 MHz: WNS +5.904 ns, no critical warnings
+- Earlier attempts: sniffing the kit's J5 header with the kit as master.
+  On a PMOD the signals were corrupt (J5 is 1.8 V, PMOD banks are 3.3 V); on
+  RASP_HAT1 (J14) with J55 set to 1.8 V, BCLK (12.288 MHz) and DATA were
+  correct but WS stayed low, most likely a contact problem at J5. Driving
+  J2 from the FPGA replaced both
+- Lesson: Vivado cannot insert the ILA debug hub (`dbg_hub`, Chipscope
+  16-302) when the `impl_1/.Xil` temp path is longer than 146 characters.
+  The project first sat in `fpga/scu35/mic_test/vivado_proj` (159); moving
+  it to `mic_test/vivado` brings it to about 143. `subst` to a drive letter
+  gives more margin
+- Known: the sample rate is 24.414 kHz, while the classification model
+  expects 22,050 Hz (BCLK 5.6448 MHz, needs an MMCM). No I2C configuration
+  of the mics yet; they run in their default mode
+
 ## hms-v0.7.0 - 2026-09-27 - I2C master on the SCU35, verified in simulation and on the on-board accelerometer, final pins on PMOD2
 
 - I2C running on the SCU35: `i2c_demo` passes every test at 100 kHz and at
