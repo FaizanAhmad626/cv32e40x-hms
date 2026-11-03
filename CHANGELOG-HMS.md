@@ -6,6 +6,56 @@ Versions are tagged `hms-v*` to keep them distinct from the upstream core
 tags (`0.1.0` through `0.10.0`), which belong to OpenHW and stop at the fork
 point.
 
+## hms-v0.9.0 - 2026-11-03 - TDM microphone receiver in the SoC, 1 kHz tone verified on all 8 mics from C
+
+- The 8-mic capture proven in `mic_test` (hms-v0.8.0) is now a CV32E40X
+  peripheral: `mic_demo` on the SCU35 records 1024 samples from each mic
+  and reports them over FT4232 port B at 115200 8N1. With a 1 kHz phone
+  tone every mic reads 1000.2 to 1000.7 Hz at -67.2 to -56.5 dBFS (the
+  spread follows where each mic sits relative to the phone), with no FIFO
+  overrun and LEDs 0, 1 and 2 lit. In a quiet room the same mics read
+  about -90 dBFS, so the tone sits 23 to 33 dB above the broadband noise
+- Added `mic_peripheral` at `0x1004_0000` in slot 5, wrapping
+  `tdm_master_rx` with a 64-entry FIFO (8 frames of all 8 mics, 328 us).
+  `DATA` (+0x00) pops `{VALID, slot[2:0], sample[23:0]}` and reads 0 when
+  empty, so software can poll it alone. `STATUS` (+0x04) has RX_VALID,
+  RX_FULL, OVERRUN (sticky, write 1 to clear) and RUNNING. `CTRL` (+0x08)
+  has EN, FLUSH and an 8-bit SLOT_MASK. `IRQ_EN` (+0x0C) covers RX_VALID
+  and OVERRUN. `FRAMES` (+0x10) counts TDM frames since EN, which software
+  uses to wait out mic start-up. Any other offset returns a bus error
+- Bus timing matches the mic_test build: BCLK = 50 MHz / 8 = 6.25 MHz (mic
+  Normal mode, 24.414 kHz per mic), DATA read 2 cycles (40 ns) after the
+  BCLK falling edge
+- Wrapper: new `MIC_BASE`, `MIC_BCLK_DIV` and `MIC_CAPTURE_PHASE`
+  parameters, `SLV_MIC` table row, ports `mic_bclk_o`, `mic_ws_o` and
+  `mic_sd_i`. Interrupt not yet routed to the core
+- Constraints: PMOD0 R4 (BCLK), R3 (WS) and W3 (DATA) active, `LVCMOS33`,
+  same wiring to the POLARIS J2 connector as hms-v0.8.0. Every active pin
+  assignment now ends with where it goes on the board (part reference,
+  header and silkscreen pin, board net name)
+- `tdm_master_rx.sv` copied into `fpga/scu35/rtl/` and the SBM100B model
+  into `fpga/scu35/sim/mic/`, so the SoC does not depend on `mic_test/`,
+  which stays a standalone project. The copies are independent
+- `create_project_scu35.tcl` preloads `mic_demo_segger.coe`
+- Added `sim/mic/tb_mic_periph.sv`: interconnect plus `mic_peripheral`
+  against 8 SBM100B models at 50 MHz. Checks reset values, bus errors,
+  BCLK period, WS width and spacing, 600 frames of tagged samples with
+  frame continuity, a 1 kHz tone on one slot, FRAMES, SLOT_MASK, FLUSH,
+  OVERRUN and RX_FULL, interrupts, and that EN = 0 stops BCLK and WS low.
+  Passes with up to 20 ns of board delay each way. Runs in xsim or
+  Verilator; Icarus 12 cannot elaborate `obi_data_interconnect`
+- Also run before hardware: the full SoC in Verilator (core, interconnect,
+  all peripherals, IP replaced by behavioural stand-ins) running a short
+  build of `mic_demo` against 8 mic models 6 dB apart. It printed
+  999.8 to 1000.1 Hz and levels exactly 6 dB apart
+- Added SEGGER app `sw/apps/segger/mic_demo`: `mic.c`/`mic.h` driver
+  (start, stop, flush, wait frames), capture of every mic into a 32 KB
+  buffer, and per mic the DC-removed RMS level in dBFS, the peak, and the
+  tone frequency from rising zero crossings with hysteresis and
+  interpolation. Integer math only. Press 0 to 7 to print one mic's raw
+  samples between BEGIN and END lines. LED0 = no overrun, LED1 = all mics
+  giving data, LED2 = all mics agree on the tone within 1 %
+
 ## hms-v0.8.0 - 2026-11-01 - TDM microphone capture on the SCU35, FPGA as bus master, 1 kHz tone verified on all 8 mics
 
 - Standalone mic test in `mic_test/`, separate from the SoC: the
