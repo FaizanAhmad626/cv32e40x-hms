@@ -55,7 +55,10 @@ figF = figure('Name', 'Spectrum'); tlF = tiledlayout(figF, 2, 4);
 for k = 0:7
     x = raw(valid & slot == k);
     N = numel(x);
-    if N < 64, continue; end
+    if N < 256                                         % need fs/N < 100 Hz for the 950-1050 Hz band
+        fprintf('%4d  skipped, only %d samples\n', k, N);
+        continue;
+    end
     x = x - mean(x);                                   % 1. remove DC
 
     levelDb = 20*log10(sqrt(mean(x.^2)) / FS24);       % 2-3. RMS, then dBFS
