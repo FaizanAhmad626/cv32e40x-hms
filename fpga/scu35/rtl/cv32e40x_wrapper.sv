@@ -27,7 +27,7 @@ module cv32e40x_wrapper import cv32e40x_pkg::*;
 // configuration; all four places must agree:
 //   link.ld        ORIGIN(MEM) = BOOT_ADDR, LENGTH(MEM) = MEM_DEPTH * 4
 //   crt0.S         trap_handler placed at MT_VEC_ADDR, .align 7
-//   main.c         LED_REG address = LED_BASE, UART_BASE, SPI_BASE and I2C_BASE likewise
+//   main.c         LED_REG address = LED_BASE, UART_BASE, SPI_BASE, I2C_BASE and MIC_BASE likewise
 //   blk_mem_gen_0  Write_Depth_A = MEM_DEPTH
 //
 // RISC-V does not mandate any of these addresses. The privileged spec leaves
@@ -51,6 +51,9 @@ parameter               SPI_BASE            = 32'h1002_0000,    // SPI master sl
 parameter int unsigned  SPI_SCLK_HZ         = 1_000_000,        // Reset SCLK rate. Software can change it through CLKDIV; the ceiling is SYS_CLK_HZ / 8 (6.25 MHz at 50 MHz).
 parameter               I2C_BASE            = 32'h1003_0000,    // I2C master slot, the next 64 KB slot after SPI. Registers at +0x00 DATA, +0x04 CMD, +0x08 STATUS, +0x0C CLKDIV, +0x10 IRQ_EN (see i2c_peripheral.sv).
 parameter int unsigned  I2C_SCL_HZ          = 100_000,          // Reset SCL rate (Standard mode). Software can change it through CLKDIV; SCL = SYS_CLK_HZ / (4 * CLKDIV), CLKDIV 33 for Fast mode.
+parameter               MIC_BASE            = 32'h1004_0000,    // TDM microphone receiver slot, the next 64 KB slot after I2C. Registers at +0x00 DATA, +0x04 STATUS, +0x08 CTRL, +0x0C IRQ_EN, +0x10 FRAMES (see mic_peripheral.sv).
+parameter int unsigned  MIC_BCLK_DIV        = 8,                // SYS_CLK_HZ cycles per TDM bit clock: 50 MHz / 8 = 6.25 MHz, SBM100B Normal mode, so each mic delivers 6.25 MHz / 256 = 24.414 kHz. Must be even; Normal mode needs BCLK between 5.1 and 7.3 MHz.
+parameter int unsigned  MIC_CAPTURE_PHASE   = 2,                // DATA is read 2 cycles (40 ns) after BCLK falls, covering the FPGA pad, wiring, the POLARIS level shifter and the mic's clock-to-out. Same bus timing as the mic_test build (30 ns at 100 MHz); simulated good for up to 20 ns of wire delay each way.
 parameter int unsigned  SYS_CLK_HZ          = 50_000_000,       // Frequency of clk_50M_s. Must track CLKOUT1_REQUESTED_OUT_FREQ in create_project_scu35.tcl, because the UART, SPI and I2C reset divisors are derived from it.
 parameter               MEM_BASE            = 32'h8000_0000,    // Base of the unified instruction+data memory, decoded by obi_data_interconnect. Same value as BOOT_ADDR because boot is at the first word of memory, but kept as a separate parameter: if boot ever moves to an offset within memory, the region base must not follow it.
 parameter int unsigned  MEM_DEPTH           = 16384             // 16384 x 32-bit words = 64 KB, holding .text, .rodata, .data, .bss and the stack. Sets the decode width: ADDR_WIDTH = 14, so the region tag is addr[31:16].
@@ -73,7 +76,11 @@ parameter int unsigned  MEM_DEPTH           = 16384             // 16384 x 32-bi
     inout   wire            i2c_scl_io, // I2C master on PMOD2 (J10), Pmod I2C order: pin 3 SCL (U2), pin 4 SDA (AA1).
     inout   wire            i2c_sda_io, //   Open drain: only driven low or left floating; needs pull-ups on the module.
 
-    output  logic           pmod_3v3_on_o   // enables the Pmod 3.3 V load switch (U81)
+    output  logic           mic_bclk_o,     // TDM master to the SB-POLARIS board, through its J2 on PMOD0 (3.3 V side of the board's level shifter):
+    output  logic           mic_ws_o,       //   PMOD0 silkscreen pin 1 BCLK (R4), pin 3 WS (R3), pin 5 DATA (W3); GND pins 9-10, 3.3 V pins 11-12
+    input   logic           mic_sd_i,
+
+    output  logic           pmod_3v3_on_o   // enables the Pmod 3.3 V load switch (U81); also powers the POLARIS board
     );  
 
 
@@ -261,20 +268,21 @@ logic        core_sleep_s;      // Core is sleeping
 // One row per interconnect slave. Index order is also the priority order
 // if two rows ever overlap (they must not).
 // ---------------------------------------------------------------------------
-localparam int unsigned NUM_SLAVES = 5;
+localparam int unsigned NUM_SLAVES = 6;
 localparam int unsigned SLV_MEM    = 0;
 localparam int unsigned SLV_LED    = 1;
 localparam int unsigned SLV_UART   = 2;
 localparam int unsigned SLV_SPI    = 3;
 localparam int unsigned SLV_I2C    = 4;
+localparam int unsigned SLV_MIC    = 5;
 
 // Every region here is 64 KB, hence the shared mask. MEM's mask follows from
 // MEM_DEPTH (16384 words = 2^16 bytes); if the depth changes, so must this.
 localparam logic [31:0] SLOT_MASK  = 32'hFFFF_0000;
 
 // Packed arrays list the highest index first.
-localparam logic [NUM_SLAVES-1:0][31:0] SLV_BASE = { I2C_BASE,  SPI_BASE,  UART_BASE, LED_BASE,  MEM_BASE  };
-localparam logic [NUM_SLAVES-1:0][31:0] SLV_MASK = { SLOT_MASK, SLOT_MASK, SLOT_MASK, SLOT_MASK, SLOT_MASK };
+localparam logic [NUM_SLAVES-1:0][31:0] SLV_BASE = { MIC_BASE,  I2C_BASE,  SPI_BASE,  UART_BASE, LED_BASE,  MEM_BASE  };
+localparam logic [NUM_SLAVES-1:0][31:0] SLV_MASK = { SLOT_MASK, SLOT_MASK, SLOT_MASK, SLOT_MASK, SLOT_MASK, SLOT_MASK };
 
 // ---------------------------------------------------------------------------
 // Interconnect to slaves
@@ -301,6 +309,7 @@ logic [ 3:0] led_pins_s;
 logic        uart_irq_s;        // not yet routed to irq_s
 logic        spi_irq_s;         // not yet routed to irq_s
 logic        i2c_irq_s;         // not yet routed to irq_s
+logic        mic_irq_s;         // not yet routed to irq_s
 logic        i2c_scl_oe_s;      // 1 = pull SCL low
 logic        i2c_sda_oe_s;      // 1 = pull SDA low
 
@@ -342,6 +351,7 @@ assign slv_exokay_s[SLV_LED]  = 1'b0;
 assign slv_exokay_s[SLV_UART] = 1'b0;
 assign slv_exokay_s[SLV_SPI]  = 1'b0;
 assign slv_exokay_s[SLV_I2C]  = 1'b0;
+assign slv_exokay_s[SLV_MIC]  = 1'b0;
 
 // Open-drain I2C pads. Driving 0 or Z is the whole of open drain; Vivado
 // infers an IOBUF from this, and an ASIC flow maps it to an open-drain pad.
@@ -658,6 +668,31 @@ i2c_peripheral_inst
     .sda_i      (   i2c_sda_io              ),
     .sda_oe_o   (   i2c_sda_oe_s            ),
     .irq_o      (   i2c_irq_s               )
+);
+
+mic_peripheral
+#(
+    .CLK_DIV        (   MIC_BCLK_DIV        ),
+    .CAPTURE_PHASE  (   MIC_CAPTURE_PHASE   ),
+    .FIFO_DEPTH     (   64                  )
+)
+mic_peripheral_inst
+(
+    .clk_i      (   clk_50M_s               ),
+    .rst_ni     (   rst_ns                  ),
+    .req_i      (   slv_req_s   [SLV_MIC]   ),
+    .gnt_o      (   slv_gnt_s   [SLV_MIC]   ),
+    .rvalid_o   (   slv_rvalid_s[SLV_MIC]   ),
+    .addr_i     (   slv_addr_s              ),
+    .be_i       (   slv_be_s                ),
+    .we_i       (   slv_we_s                ),
+    .wdata_i    (   slv_wdata_s             ),
+    .rdata_o    (   slv_rdata_s [SLV_MIC]   ),
+    .err_o      (   slv_err_s   [SLV_MIC]   ),
+    .mic_bclk_o (   mic_bclk_o              ),
+    .mic_ws_o   (   mic_ws_o                ),
+    .mic_sd_i   (   mic_sd_i                ),
+    .irq_o      (   mic_irq_s               )
 );
 
 endmodule
